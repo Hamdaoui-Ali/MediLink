@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: ${MEDILINK_DB_URL:jdbc:h2:mem:medilink;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    username: ${MEDILINK_DB_USERNAME:root}
+    password: ${MEDILINK_DB_PASSWORD:root}
+    driver-class-name: ${MEDILINK_DB_DRIVER:org.h2.Driver}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  flyway:
+    enabled: false
+
+logging:
+  level:
+    root: INFO
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

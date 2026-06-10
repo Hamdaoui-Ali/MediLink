@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: medilink-backend
+  profiles:
+    default: local
+
+server:
+  servlet:
+    context-path: /api
+  port: 1234
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+medilink:
+  security:
+    jwt:
+      secret: ${MEDILINK_JWT_SECRET:local-development-secret-key-for-medilink-jwt-signing-32}
