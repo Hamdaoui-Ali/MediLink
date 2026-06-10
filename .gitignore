@@ -1,0 +1,31 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+coverage/
+
+# Java / Spring
+target/
+build/
+out/
+.mvn/wrapper/maven-wrapper.jar
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS / tooling
+.DS_Store
+Thumbs.db
+
+# Workspace metadata
+.codex/
+.gemini/
