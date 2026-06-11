@@ -1,0 +1,135 @@
+<section class="doctor-management">
+  <header class="doctor-management__header">
+    <div>
+      <p class="eyebrow">Admin</p>
+      <h2>Doctor management</h2>
+    </div>
+    <a routerLink="/admin">Back to dashboard</a>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="form-error" role="alert">{{ errorMessage() }}</p>
+  }
+
+  @if (successMessage()) {
+    <p class="form-success" role="status">{{ successMessage() }}</p>
+  }
+
+  <div class="doctor-management__grid">
+    <section class="doctor-list" aria-labelledby="doctor-list-title">
+      <div class="section-heading">
+        <h3 id="doctor-list-title">Doctors</h3>
+        <button type="button" class="secondary-action" (click)="load()" [disabled]="isLoading()">Refresh</button>
+      </div>
+
+      @if (isLoading()) {
+        <p class="state-message">Loading doctors...</p>
+      } @else if (!doctors().length) {
+        <p class="state-message">No doctors found.</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Specialty</th>
+                <th>Status</th>
+                <th>Duration</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (doctor of doctors(); track doctor.id) {
+                <tr>
+                  <td>{{ doctor.fullName }}</td>
+                  <td>{{ doctor.email }}</td>
+                  <td>{{ doctor.specialtyName }}</td>
+                  <td><span class="status" [class.status--inactive]="doctor.status === 'INACTIVE'">{{ doctor.status }}</span></td>
+                  <td>{{ doctor.consultationDurationMinutes }} min</td>
+                  <td>
+                    <div class="action-row">
+                      <button type="button" class="secondary-action" (click)="edit(doctor)">Edit</button>
+                      @if (doctor.status === 'ACTIVE') {
+                        <button type="button" class="danger-action" (click)="deactivate(doctor)">Deactivate</button>
+                      } @else {
+                        <button type="button" class="secondary-action" (click)="activate(doctor)">Activate</button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <form class="doctor-form" [formGroup]="doctorForm" (ngSubmit)="submit()" novalidate>
+      <div class="section-heading">
+        <h3>{{ formTitle() }}</h3>
+        @if (selectedDoctor()) {
+          <button type="button" class="secondary-action" (click)="resetForm()">Cancel</button>
+        }
+      </div>
+
+      <label>
+        <span>Full name</span>
+        <input type="text" formControlName="fullName" autocomplete="name" />
+      </label>
+      @if (hasError('fullName')) {
+        <p class="field-error">Full name is required.</p>
+      }
+
+      <label>
+        <span>Email</span>
+        <input type="email" formControlName="email" autocomplete="email" />
+      </label>
+      @if (hasError('email')) {
+        <p class="field-error">Enter a valid email address.</p>
+      }
+
+      <label>
+        <span>Password</span>
+        <input type="password" formControlName="password" autocomplete="new-password" />
+      </label>
+
+      <div class="doctor-form__grid">
+        <label>
+          <span>Phone</span>
+          <input type="tel" formControlName="phoneNumber" autocomplete="tel" />
+        </label>
+
+        <label>
+          <span>Duration</span>
+          <input type="number" formControlName="consultationDurationMinutes" min="5" max="240" step="5" />
+        </label>
+      </div>
+
+      <label>
+        <span>Specialty</span>
+        <select formControlName="specialtyId">
+          <option value="">Select specialty</option>
+          @for (specialty of specialties(); track specialty.id) {
+            <option [value]="specialty.id">{{ specialty.name }}</option>
+          }
+        </select>
+      </label>
+      @if (hasError('specialtyId')) {
+        <p class="field-error">Specialty is required.</p>
+      }
+
+      <label>
+        <span>Clinic address</span>
+        <input type="text" formControlName="clinicAddress" />
+      </label>
+
+      <label>
+        <span>Biography</span>
+        <textarea formControlName="biography" rows="4"></textarea>
+      </label>
+
+      <button type="submit" class="primary-action" [disabled]="doctorForm.invalid || isSaving()">{{ submitLabel() }}</button>
+    </form>
+  </div>
+</section>

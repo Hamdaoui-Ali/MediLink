@@ -34,6 +34,13 @@ export const routes: Routes = [
       import('./features/doctor/doctor-dashboard.page').then((module) => module.DoctorDashboardPage)
   },
   {
+    path: 'admin/doctors',
+    canActivate: [authGuard],
+    data: { roles: ['ADMIN'] },
+    loadComponent: () =>
+      import('./features/admin/admin-doctor-management.page').then((module) => module.AdminDoctorManagementPage)
+  },
+  {
     path: 'admin',
     canActivate: [authGuard],
     data: { roles: ['ADMIN'] },
