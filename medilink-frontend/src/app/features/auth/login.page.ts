@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../shared/services/auth.service';
@@ -46,8 +47,8 @@ export class LoginPage {
 
         this.authService.redirectAfterLogin();
       },
-      error: () => {
-        this.errorMessage.set('The email or password is incorrect.');
+      error: (error: unknown) => {
+        this.errorMessage.set(this.getErrorMessage(error));
         this.isSubmitting.set(false);
       }
     });
@@ -56,5 +57,17 @@ export class LoginPage {
   hasError(controlName: 'email' | 'password'): boolean {
     const control = this.loginForm.controls[controlName];
     return control.invalid && (control.dirty || control.touched);
+  }
+
+  getErrorMessage(error: unknown): string {
+    if (error instanceof HttpErrorResponse && error.status === 0) {
+      return 'Cannot reach the backend. Make sure the API is running at http://localhost:1234/api.';
+    }
+
+    if (error instanceof HttpErrorResponse && error.status >= 500) {
+      return 'Login service failed. Restart the backend and make sure database migrations ran.';
+    }
+
+    return 'The email or password is incorrect.';
   }
 }
