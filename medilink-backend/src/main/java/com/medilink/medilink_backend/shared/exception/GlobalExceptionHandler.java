@@ -2,6 +2,8 @@ package com.medilink.medilink_backend.shared.exception;
 
 import com.medilink.medilink_backend.administration.service.DuplicateSpecialtyNameException;
 import com.medilink.medilink_backend.administration.service.SpecialtyNotFoundException;
+import com.medilink.medilink_backend.doctor.service.DoctorNotFoundException;
+import com.medilink.medilink_backend.doctor.service.InvalidDoctorRequestException;
 import com.medilink.medilink_backend.identity.service.EmailAlreadyUsedException;
 import com.medilink.medilink_backend.identity.service.InactiveAccountException;
 import com.medilink.medilink_backend.identity.service.InvalidCredentialsException;
@@ -65,6 +67,20 @@ public class GlobalExceptionHandler {
 	ResponseEntity<ApiResponse<Void>> handleSpecialtyNotFound(SpecialtyNotFoundException exception) {
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure(
 				new ApiError("SPECIALTY_NOT_FOUND", "Specialty was not found", Map.of())
+		));
+	}
+
+	@ExceptionHandler(DoctorNotFoundException.class)
+	ResponseEntity<ApiResponse<Void>> handleDoctorNotFound(DoctorNotFoundException exception) {
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure(
+				new ApiError("DOCTOR_NOT_FOUND", "Doctor was not found", Map.of())
+		));
+	}
+
+	@ExceptionHandler(InvalidDoctorRequestException.class)
+	ResponseEntity<ApiResponse<Void>> handleInvalidDoctorRequest(InvalidDoctorRequestException exception) {
+		return ResponseEntity.badRequest().body(ApiResponse.failure(
+				new ApiError("INVALID_DOCTOR_REQUEST", exception.getMessage(), Map.of())
 		));
 	}
 
