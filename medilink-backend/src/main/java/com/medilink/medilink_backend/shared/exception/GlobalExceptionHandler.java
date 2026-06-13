@@ -2,6 +2,9 @@ package com.medilink.medilink_backend.shared.exception;
 
 import com.medilink.medilink_backend.administration.service.DuplicateSpecialtyNameException;
 import com.medilink.medilink_backend.administration.service.SpecialtyNotFoundException;
+import com.medilink.medilink_backend.appointment.service.AppointmentNotFoundException;
+import com.medilink.medilink_backend.appointment.service.DoctorRefNotFoundException;
+import com.medilink.medilink_backend.appointment.service.InvalidAppointmentStatusException;
 import com.medilink.medilink_backend.identity.service.EmailAlreadyUsedException;
 import com.medilink.medilink_backend.identity.service.InactiveAccountException;
 import com.medilink.medilink_backend.identity.service.InvalidCredentialsException;
@@ -100,6 +103,27 @@ public class GlobalExceptionHandler {
 	ResponseEntity<ApiResponse<Void>> handleInactiveAccount(InactiveAccountException exception) {
 		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.failure(
 				new ApiError("INACTIVE_ACCOUNT", "Account is not active", Map.of())
+		));
+	}
+
+	@ExceptionHandler(AppointmentNotFoundException.class)
+	ResponseEntity<ApiResponse<Void>> handleAppointmentNotFound(AppointmentNotFoundException exception) {
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure(
+				new ApiError("APPOINTMENT_NOT_FOUND", exception.getMessage(), Map.of())
+		));
+	}
+
+	@ExceptionHandler(DoctorRefNotFoundException.class)
+	ResponseEntity<ApiResponse<Void>> handleDoctorRefNotFound(DoctorRefNotFoundException exception) {
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure(
+				new ApiError("DOCTOR_NOT_FOUND", exception.getMessage(), Map.of())
+		));
+	}
+
+	@ExceptionHandler(InvalidAppointmentStatusException.class)
+	ResponseEntity<ApiResponse<Void>> handleInvalidAppointmentStatus(InvalidAppointmentStatusException exception) {
+		return ResponseEntity.badRequest().body(ApiResponse.failure(
+				new ApiError("INVALID_STATUS_TRANSITION", exception.getMessage(), Map.of())
 		));
 	}
 
