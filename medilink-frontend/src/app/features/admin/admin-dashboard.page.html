@@ -1,0 +1,88 @@
+<section class="admin-dashboard">
+  <header>
+    <p class="eyebrow">Admin workspace</p>
+    <h2>Dashboard Overview</h2>
+  </header>
+
+  @if (loading()) {
+    <div class="state-message state-loading">
+      <p>Loading dashboard data...</p>
+    </div>
+  } @else if (error()) {
+    <div class="state-message state-error">
+      <p>{{ error() }}</p>
+      <button (click)="loadDashboard()">Try again</button>
+    </div>
+  } @else {
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-value">{{ overview()?.totalDoctors ?? 0 }}</span>
+        <span class="stat-label">Active Doctors</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ overview()?.totalPatients ?? 0 }}</span>
+        <span class="stat-label">Total Patients</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ overview()?.totalAppointments ?? 0 }}</span>
+        <span class="stat-label">Total Appointments</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ overview()?.totalSpecialties ?? 0 }}</span>
+        <span class="stat-label">Active Specialties</span>
+      </div>
+    </div>
+
+    <nav class="quick-links">
+      <h3>Management</h3>
+      <div class="quick-links-grid">
+        <a routerLink="/admin/specialties">
+          <span>Specialties</span>
+          <strong>Manage clinical specialties</strong>
+        </a>
+        <a routerLink="/admin/doctors">
+          <span>Doctors</span>
+          <strong>Manage doctor accounts</strong>
+        </a>
+      </div>
+    </nav>
+
+    <section class="recent-appointments">
+      <h3>Recent Appointments</h3>
+      @if (!overview()?.recentAppointments?.length) {
+        <div class="state-message state-empty">
+          <p>No appointments yet.</p>
+        </div>
+      } @else {
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Doctor</th>
+                <th>Patient</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (appointment of overview()?.recentAppointments; track appointment.id) {
+                <tr>
+                  <td>{{ appointment.appointmentDate }}</td>
+                  <td>{{ appointment.startTime }}</td>
+                  <td>{{ appointment.doctorName }}</td>
+                  <td>{{ appointment.patientName }}</td>
+                  <td>
+                    <span class="status-pill" [ngClass]="'status-' + appointment.status.toLowerCase()">
+                      {{ appointment.status }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</section>
