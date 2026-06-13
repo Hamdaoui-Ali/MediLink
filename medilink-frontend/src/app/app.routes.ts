@@ -41,6 +41,13 @@ export const routes: Routes = [
       import('./features/admin/admin-dashboard.page').then((module) => module.AdminDashboardPage)
   },
   {
+    path: 'admin/specialties',
+    canActivate: [authGuard],
+    data: { roles: ['ADMIN'] },
+    loadComponent: () =>
+      import('./features/admin/admin-specialty-management.page').then((module) => module.AdminSpecialtyManagementPage)
+  },
+  {
     path: '**',
     redirectTo: ''
   }

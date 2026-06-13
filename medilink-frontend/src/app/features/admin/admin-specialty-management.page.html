@@ -1,0 +1,103 @@
+<section class="specialty-shell">
+  <header class="specialty-header">
+    <div>
+      <a routerLink="/admin" class="back-link">Admin</a>
+      <h1>Specialty Management</h1>
+    </div>
+    <button type="button" class="secondary-action" (click)="loadSpecialties()" [disabled]="isLoading()">
+      Refresh
+    </button>
+  </header>
+
+  <div class="specialty-grid">
+    <section class="specialty-list" aria-labelledby="specialty-list-title">
+      <div class="panel-heading">
+        <div>
+          <h2 id="specialty-list-title">Specialties</h2>
+          <p>{{ specialties().length }} total</p>
+        </div>
+        <button type="button" (click)="startCreate()">New</button>
+      </div>
+
+      @if (isLoading()) {
+        <p class="state-text">Loading specialties...</p>
+      } @else if (specialties().length === 0) {
+        <p class="state-text">No specialties yet.</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Description</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (specialty of specialties(); track specialty.id) {
+                <tr [class.is-selected]="selectedSpecialty()?.id === specialty.id">
+                  <td>{{ specialty.name }}</td>
+                  <td>
+                    <span class="status-pill" [class.is-inactive]="specialty.status === 'INACTIVE'">
+                      {{ specialty.status }}
+                    </span>
+                  </td>
+                  <td>{{ specialty.description || 'No description' }}</td>
+                  <td class="actions">
+                    <button type="button" class="secondary-action" (click)="startEdit(specialty)">Edit</button>
+                    @if (specialty.status === 'ACTIVE') {
+                      <button type="button" class="danger-action" (click)="deactivate(specialty)">Deactivate</button>
+                    } @else {
+                      <button type="button" class="secondary-action" (click)="activate(specialty)">Activate</button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <form class="specialty-form" [formGroup]="specialtyForm" (ngSubmit)="submit()" novalidate>
+      <div class="panel-heading">
+        <div>
+          <h2>{{ isEditing() ? 'Edit Specialty' : 'Create Specialty' }}</h2>
+          <p>{{ isEditing() ? selectedSpecialty()?.status : 'ACTIVE' }}</p>
+        </div>
+      </div>
+
+      <label>
+        <span>Name</span>
+        <input type="text" formControlName="name" autocomplete="off" />
+      </label>
+      @if (hasError('name')) {
+        <p class="field-error">Name is required and must be 120 characters or fewer.</p>
+      }
+
+      <label>
+        <span>Description</span>
+        <textarea formControlName="description" rows="5"></textarea>
+      </label>
+      @if (hasError('description')) {
+        <p class="field-error">Description must be 500 characters or fewer.</p>
+      }
+
+      @if (errorMessage()) {
+        <p class="form-error" role="alert">{{ errorMessage() }}</p>
+      }
+
+      @if (successMessage()) {
+        <p class="form-success" role="status">{{ successMessage() }}</p>
+      }
+
+      <div class="form-actions">
+        <button type="submit" [disabled]="specialtyForm.invalid || isSaving()">{{ submitLabel() }}</button>
+        @if (isEditing()) {
+          <button type="button" class="secondary-action" (click)="startCreate()">Cancel</button>
+        }
+      </div>
+    </form>
+  </div>
+</section>
