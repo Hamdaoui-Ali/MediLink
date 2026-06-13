@@ -2,6 +2,9 @@ package com.medilink.medilink_backend.shared.exception;
 
 import com.medilink.medilink_backend.administration.service.DuplicateSpecialtyNameException;
 import com.medilink.medilink_backend.administration.service.SpecialtyNotFoundException;
+import com.medilink.medilink_backend.doctor.service.AvailabilityNotFoundException;
+import com.medilink.medilink_backend.doctor.service.DoctorNotFoundException;
+import com.medilink.medilink_backend.doctor.service.InvalidAvailabilityException;
 import com.medilink.medilink_backend.identity.service.EmailAlreadyUsedException;
 import com.medilink.medilink_backend.identity.service.InactiveAccountException;
 import com.medilink.medilink_backend.identity.service.InvalidCredentialsException;
@@ -100,6 +103,27 @@ public class GlobalExceptionHandler {
 	ResponseEntity<ApiResponse<Void>> handleInactiveAccount(InactiveAccountException exception) {
 		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.failure(
 				new ApiError("INACTIVE_ACCOUNT", "Account is not active", Map.of())
+		));
+	}
+
+	@ExceptionHandler(DoctorNotFoundException.class)
+	ResponseEntity<ApiResponse<Void>> handleDoctorNotFound(DoctorNotFoundException exception) {
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure(
+				new ApiError("DOCTOR_NOT_FOUND", exception.getMessage(), Map.of())
+		));
+	}
+
+	@ExceptionHandler(AvailabilityNotFoundException.class)
+	ResponseEntity<ApiResponse<Void>> handleAvailabilityNotFound(AvailabilityNotFoundException exception) {
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure(
+				new ApiError("AVAILABILITY_NOT_FOUND", exception.getMessage(), Map.of())
+		));
+	}
+
+	@ExceptionHandler(InvalidAvailabilityException.class)
+	ResponseEntity<ApiResponse<Void>> handleInvalidAvailability(InvalidAvailabilityException exception) {
+		return ResponseEntity.badRequest().body(ApiResponse.failure(
+				new ApiError("INVALID_AVAILABILITY", exception.getMessage(), Map.of())
 		));
 	}
 

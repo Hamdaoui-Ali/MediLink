@@ -1,0 +1,101 @@
+<section class="availability-page">
+  <header>
+    <a routerLink="/doctor" class="back-link">&larr; Back to Dashboard</a>
+    <h2>Weekly Availability</h2>
+    <p class="subtitle">Set your recurring weekly schedule so patients can book appointments.</p>
+  </header>
+
+  <div class="form-card">
+    <h3>{{ editingSlot() ? 'Edit Availability' : 'Add Availability' }}</h3>
+
+    <form [formGroup]="availabilityForm" (ngSubmit)="submitForm()">
+      <div class="form-row">
+        <label>
+          Day
+          <select formControlName="dayOfWeek">
+            <option value="" disabled>Select a day</option>
+            <option value="1">Monday</option>
+            <option value="2">Tuesday</option>
+            <option value="3">Wednesday</option>
+            <option value="4">Thursday</option>
+            <option value="5">Friday</option>
+            <option value="6">Saturday</option>
+            <option value="7">Sunday</option>
+          </select>
+        </label>
+
+        <label>
+          Start Time
+          <input type="time" formControlName="startTime" step="60" />
+        </label>
+
+        <label>
+          End Time
+          <input type="time" formControlName="endTime" step="60" />
+        </label>
+
+        <div class="form-actions">
+          <button type="submit" [disabled]="availabilityForm.invalid || saving()">
+            {{ editingSlot() ? 'Save Changes' : 'Add Slot' }}
+          </button>
+          @if (editingSlot()) {
+            <button type="button" class="btn-cancel" (click)="cancelEdit()">Cancel</button>
+          }
+        </div>
+      </div>
+    </form>
+
+    @if (fieldError()) {
+      <p class="form-error">{{ fieldError() }}</p>
+    }
+    @if (successMessage()) {
+      <p class="form-success">{{ successMessage() }}</p>
+    }
+  </div>
+
+  @if (loading()) {
+    <p class="state-loading">Loading your availability...</p>
+  } @else if (error()) {
+    <div class="state-error">
+      <p>{{ error() }}</p>
+      <button (click)="loadAvailability()">Try again</button>
+    </div>
+  } @else if (!slots().length) {
+    <div class="state-empty">
+      <p>No availability slots set yet. Add your first slot above to let patients know when to book.</p>
+    </div>
+  } @else {
+    <div class="slots-grouped">
+      @for (daySlots of groupedSlots(); track daySlots.day) {
+        <div class="day-group">
+          <h4>{{ daySlots.day }}</h4>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th>Duration</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (slot of daySlots.slots; track slot.id) {
+                  <tr>
+                    <td>{{ slot.startTime }}</td>
+                    <td>{{ slot.endTime }}</td>
+                    <td>{{ slot.duration }}</td>
+                    <td class="actions">
+                      <button class="btn-edit" (click)="startEdit(slot)">Edit</button>
+                      <button class="btn-remove" (click)="confirmRemove(slot)">Remove</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>
