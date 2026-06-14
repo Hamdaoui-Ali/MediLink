@@ -3,11 +3,14 @@ package com.medilink.medilink_backend.appointment.service;
 import com.medilink.medilink_backend.appointment.domain.Appointment;
 import com.medilink.medilink_backend.appointment.domain.AppointmentStatus;
 import com.medilink.medilink_backend.appointment.domain.DoctorRef;
+import com.medilink.medilink_backend.appointment.domain.PatientRef;
 import com.medilink.medilink_backend.appointment.repository.AppointmentRepository;
 import com.medilink.medilink_backend.appointment.repository.DoctorRefRepository;
 import com.medilink.medilink_backend.appointment.web.AppointmentResponse;
+import com.medilink.medilink_backend.patient.repository.PatientRepository;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,13 +18,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AppointmentServiceTest {
 
 	private final AppointmentRepository appointmentRepository = mock(AppointmentRepository.class);
 	private final DoctorRefRepository doctorRefRepository = mock(DoctorRefRepository.class);
-	private final AppointmentService service = new AppointmentService(appointmentRepository, doctorRefRepository);
+	private final PatientRepository patientRepository = mock(PatientRepository.class);
+	private final AppointmentService service = new AppointmentService(appointmentRepository, doctorRefRepository, patientRepository);
 
 	@Test
 	void resolveDoctorReturnsActiveDoctor() {
@@ -154,14 +159,84 @@ class AppointmentServiceTest {
 	@Test
 	void listAppointmentsReturnsAppointmentsForDoctor() {
 		Appointment appointment = mock(Appointment.class);
+		when(appointment.getPatientId()).thenReturn(2L);
 		when(appointment.getStatus()).thenReturn(AppointmentStatus.CONFIRMED);
 		when(appointmentRepository.findByDoctorIdOrderByAppointmentDateDescStartTimeDesc(1L))
 				.thenReturn(List.of(appointment));
+		when(patientRepository.findPatientNamesByIds(List.of(2L)))
+				.thenReturn(List.of(new PatientRef(2L, "Jane Patient")));
 
 		List<AppointmentResponse> appointments = service.listAppointments(1L);
 
 		assertEquals(1, appointments.size());
 		assertEquals(AppointmentStatus.CONFIRMED, appointments.getFirst().status());
+		assertEquals("Jane Patient", appointments.getFirst().patientName());
+	}
+
+	@Test
+	void listFilteredAppointmentsSupportsDateRangeOnly() {
+		Appointment appointment = mock(Appointment.class);
+		when(appointment.getPatientId()).thenReturn(2L);
+		when(appointment.getStatus()).thenReturn(AppointmentStatus.CONFIRMED);
+		LocalDate from = LocalDate.of(2026, 6, 1);
+		LocalDate to = LocalDate.of(2026, 6, 30);
+		when(appointmentRepository.findByDoctorIdAndAppointmentDateBetweenOrderByAppointmentDateDescStartTimeDesc(1L, from, to))
+				.thenReturn(List.of(appointment));
+		when(patientRepository.findPatientNamesByIds(List.of(2L)))
+				.thenReturn(List.of(new PatientRef(2L, "Jane Patient")));
+
+		List<AppointmentResponse> appointments = service.listFilteredAppointments(1L, null, from, to);
+
+		assertEquals(1, appointments.size());
+		assertEquals("Jane Patient", appointments.getFirst().patientName());
+	}
+
+	@Test
+	void listFilteredAppointmentsSupportsStatusAndDateRange() {
+		Appointment appointment = mock(Appointment.class);
+		when(appointment.getPatientId()).thenReturn(2L);
+		when(appointment.getStatus()).thenReturn(AppointmentStatus.COMPLETED);
+		LocalDate from = LocalDate.of(2026, 6, 1);
+		LocalDate to = LocalDate.of(2026, 6, 30);
+		when(appointmentRepository.findByDoctorIdAndStatusAndAppointmentDateBetweenOrderByAppointmentDateDescStartTimeDesc(
+				1L, AppointmentStatus.COMPLETED, from, to))
+				.thenReturn(List.of(appointment));
+		when(patientRepository.findPatientNamesByIds(List.of(2L)))
+				.thenReturn(List.of(new PatientRef(2L, "Jane Patient")));
+
+		List<AppointmentResponse> appointments = service.listFilteredAppointments(
+				1L, AppointmentStatus.COMPLETED, from, to);
+
+		assertEquals(1, appointments.size());
+		assertEquals(AppointmentStatus.COMPLETED, appointments.getFirst().status());
+	}
+
+	@Test
+	void listFilteredAppointmentsReturnsEmptyListWhenNoResults() {
+		LocalDate from = LocalDate.of(2026, 1, 1);
+		LocalDate to = LocalDate.of(2026, 1, 31);
+		when(appointmentRepository.findByDoctorIdAndStatusAndAppointmentDateBetweenOrderByAppointmentDateDescStartTimeDesc(
+				1L, AppointmentStatus.MISSED, from, to))
+				.thenReturn(List.of());
+
+		List<AppointmentResponse> appointments = service.listFilteredAppointments(
+				1L, AppointmentStatus.MISSED, from, to);
+
+		assertTrue(appointments.isEmpty());
+	}
+
+	@Test
+	void listFilteredAppointmentsNoFiltersDelegatesToListAll() {
+		Appointment appointment = mock(Appointment.class);
+		when(appointment.getPatientId()).thenReturn(2L);
+		when(appointmentRepository.findByDoctorIdOrderByAppointmentDateDescStartTimeDesc(1L))
+				.thenReturn(List.of(appointment));
+		when(patientRepository.findPatientNamesByIds(List.of(2L)))
+				.thenReturn(List.of(new PatientRef(2L, "Jane Patient")));
+
+		service.listFilteredAppointments(1L, null, null, null);
+
+		verify(appointmentRepository).findByDoctorIdOrderByAppointmentDateDescStartTimeDesc(1L);
 	}
 
 	@Test

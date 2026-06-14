@@ -42,18 +42,64 @@ class DoctorAppointmentControllerTest {
 		when(doctor.getId()).thenReturn(1L);
 
 		List<AppointmentResponse> appointments = List.of(
-				new AppointmentResponse(10L, 1L, 2L, LocalDate.of(2026, 6, 15),
+				new AppointmentResponse(10L, 1L, 2L, "Jane Patient",
+						LocalDate.of(2026, 6, 15),
 						LocalTime.of(10, 0), LocalTime.of(10, 30),
 						AppointmentStatus.CONFIRMED, "Checkup", null)
 		);
-		when(mockService.listAppointments(1L)).thenReturn(appointments);
+		when(mockService.listFilteredAppointments(1L, null, null, null)).thenReturn(appointments);
 
 		DoctorAppointmentController controller = new DoctorAppointmentController(mockService);
-		ApiResponse<List<AppointmentResponse>> response = controller.listAppointments(jwt, null);
+		ApiResponse<List<AppointmentResponse>> response = controller.listAppointments(jwt, null, null, null);
 
 		assertTrue(response.success());
 		assertEquals(1, response.data().size());
 		assertEquals(AppointmentStatus.CONFIRMED, response.data().getFirst().status());
+	}
+
+	@Test
+	void listAppointmentsSupportsDateRangeFilter() {
+		JwtAuthenticationToken jwt = createJwt(5L);
+		AppointmentService mockService = mock(AppointmentService.class);
+		com.medilink.medilink_backend.appointment.domain.DoctorRef doctor = mock(com.medilink.medilink_backend.appointment.domain.DoctorRef.class);
+		when(mockService.resolveDoctor(5L)).thenReturn(doctor);
+		when(doctor.getId()).thenReturn(1L);
+
+		LocalDate from = LocalDate.of(2026, 6, 1);
+		LocalDate to = LocalDate.of(2026, 6, 30);
+		List<AppointmentResponse> appointments = List.of(
+				new AppointmentResponse(10L, 1L, 2L, "Jane Patient",
+						LocalDate.of(2026, 6, 15),
+						LocalTime.of(10, 0), LocalTime.of(10, 30),
+						AppointmentStatus.CONFIRMED, "Checkup", null)
+		);
+		when(mockService.listFilteredAppointments(1L, null, from, to)).thenReturn(appointments);
+
+		DoctorAppointmentController controller = new DoctorAppointmentController(mockService);
+		ApiResponse<List<AppointmentResponse>> response = controller.listAppointments(jwt, null, from, to);
+
+		assertTrue(response.success());
+		assertEquals(1, response.data().size());
+	}
+
+	@Test
+	void listAppointmentsSupportsStatusAndDateRangeFilter() {
+		JwtAuthenticationToken jwt = createJwt(5L);
+		AppointmentService mockService = mock(AppointmentService.class);
+		com.medilink.medilink_backend.appointment.domain.DoctorRef doctor = mock(com.medilink.medilink_backend.appointment.domain.DoctorRef.class);
+		when(mockService.resolveDoctor(5L)).thenReturn(doctor);
+		when(doctor.getId()).thenReturn(1L);
+
+		LocalDate from = LocalDate.of(2026, 6, 1);
+		LocalDate to = LocalDate.of(2026, 6, 30);
+		when(mockService.listFilteredAppointments(1L, AppointmentStatus.COMPLETED, from, to))
+				.thenReturn(List.of());
+
+		DoctorAppointmentController controller = new DoctorAppointmentController(mockService);
+		ApiResponse<List<AppointmentResponse>> response = controller.listAppointments(jwt, AppointmentStatus.COMPLETED, from, to);
+
+		assertTrue(response.success());
+		assertEquals(0, response.data().size());
 	}
 
 	@Test
@@ -64,7 +110,7 @@ class DoctorAppointmentControllerTest {
 		when(mockService.resolveDoctor(5L)).thenReturn(doctor);
 		when(doctor.getId()).thenReturn(1L);
 
-		AppointmentResponse response = new AppointmentResponse(10L, 1L, 2L,
+		AppointmentResponse response = new AppointmentResponse(10L, 1L, 2L, "Jane Patient",
 				LocalDate.of(2026, 6, 15), LocalTime.of(10, 0), LocalTime.of(10, 30),
 				AppointmentStatus.CONFIRMED, "Checkup", "Patient doing well");
 		when(mockService.updateNotes(1L, 10L, "Patient doing well")).thenReturn(response);
@@ -84,7 +130,7 @@ class DoctorAppointmentControllerTest {
 		when(mockService.resolveDoctor(5L)).thenReturn(doctor);
 		when(doctor.getId()).thenReturn(1L);
 
-		AppointmentResponse response = new AppointmentResponse(10L, 1L, 2L,
+		AppointmentResponse response = new AppointmentResponse(10L, 1L, 2L, "Jane Patient",
 				LocalDate.of(2026, 6, 15), LocalTime.of(10, 0), LocalTime.of(10, 30),
 				AppointmentStatus.COMPLETED, "Checkup", null);
 		when(mockService.updateStatus(1L, 10L, AppointmentStatus.COMPLETED)).thenReturn(response);

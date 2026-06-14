@@ -17,6 +17,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -166,6 +167,79 @@ class DoctorAppointmentIntegrationTest {
 
 		assertEquals(HttpStatus.BAD_REQUEST.value(), response.statusCode());
 		assertEquals("INVALID_STATUS_TRANSITION", JsonPath.read(response.body(), "$.error.code"));
+	}
+
+	@Test
+	void doctorCanFilterAppointmentsByDateRange() throws Exception {
+		Long patientId = jdbcTemplate.queryForObject("SELECT id FROM patients LIMIT 1", Long.class);
+		jdbcTemplate.update(
+				"INSERT INTO appointments (doctor_id, patient_id, appointment_date, start_time, end_time, status, reason) VALUES (?, ?, '2026-07-15', '14:00:00', '14:30:00', 'CONFIRMED', 'Mid-year follow-up')",
+				doctorId, patientId
+		);
+
+		ApiHttpResponse response = exchange(
+				HttpMethod.GET,
+				"/api/v1/doctor/appointments?from=2026-07-01&to=2026-07-31",
+				doctorToken,
+				null
+		);
+
+		assertEquals(HttpStatus.OK.value(), response.statusCode());
+		List<String> dates = JsonPath.read(response.body(), "$.data[*].appointmentDate");
+		assertEquals(1, dates.size());
+		assertEquals("2026-07-15", dates.getFirst());
+	}
+
+	@Test
+	void doctorCanFilterAppointmentsByStatusAndDateRange() throws Exception {
+		Long patientId = jdbcTemplate.queryForObject("SELECT id FROM patients LIMIT 1", Long.class);
+		jdbcTemplate.update(
+				"INSERT INTO appointments (doctor_id, patient_id, appointment_date, start_time, end_time, status, reason) VALUES (?, ?, '2026-08-10', '09:00:00', '09:30:00', 'COMPLETED', 'August checkup')",
+				doctorId, patientId
+		);
+
+		ApiHttpResponse response = exchange(
+				HttpMethod.GET,
+				"/api/v1/doctor/appointments?status=COMPLETED&from=2026-08-01&to=2026-08-31",
+				doctorToken,
+				null
+		);
+
+		assertEquals(HttpStatus.OK.value(), response.statusCode());
+		List<String> statuses = JsonPath.read(response.body(), "$.data[*].status");
+		assertEquals(1, statuses.size());
+		assertEquals("COMPLETED", statuses.getFirst());
+	}
+
+	@Test
+	void dateRangeExcludesAppointmentsOutsideRange() throws Exception {
+		Long patientId = jdbcTemplate.queryForObject("SELECT id FROM patients LIMIT 1", Long.class);
+		jdbcTemplate.update(
+				"INSERT INTO appointments (doctor_id, patient_id, appointment_date, start_time, end_time, status, reason) VALUES (?, ?, '2026-09-01', '11:00:00', '11:30:00', 'CONFIRMED', 'September visit')",
+				doctorId, patientId
+		);
+
+		ApiHttpResponse response = exchange(
+				HttpMethod.GET,
+				"/api/v1/doctor/appointments?from=2026-09-01&to=2026-09-30",
+				doctorToken,
+				null
+		);
+
+		assertEquals(HttpStatus.OK.value(), response.statusCode());
+		List<String> dates = JsonPath.read(response.body(), "$.data[*].appointmentDate");
+		assertEquals(1, dates.size());
+
+		ApiHttpResponse outsideResponse = exchange(
+				HttpMethod.GET,
+				"/api/v1/doctor/appointments?from=2026-10-01&to=2026-10-31",
+				doctorToken,
+				null
+		);
+
+		assertEquals(HttpStatus.OK.value(), outsideResponse.statusCode());
+		List<?> data = JsonPath.read(outsideResponse.body(), "$.data");
+		assertEquals(0, ((List<?>) data).size());
 	}
 
 	@Test

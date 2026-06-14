@@ -9,6 +9,7 @@ public record AppointmentResponse(
 		Long id,
 		Long doctorId,
 		Long patientId,
+		String patientName,
 		LocalDate appointmentDate,
 		LocalTime startTime,
 		LocalTime endTime,

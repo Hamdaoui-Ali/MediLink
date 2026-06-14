@@ -4,6 +4,8 @@ import com.medilink.medilink_backend.appointment.domain.AppointmentStatus;
 import com.medilink.medilink_backend.appointment.service.AppointmentService;
 import com.medilink.medilink_backend.shared.api.ApiResponse;
 import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -30,12 +33,13 @@ public class DoctorAppointmentController {
 	@GetMapping
 	public ApiResponse<List<AppointmentResponse>> listAppointments(
 			JwtAuthenticationToken jwt,
-			@RequestParam(required = false) AppointmentStatus status
+			@RequestParam(required = false) AppointmentStatus status,
+			@RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE) LocalDate from,
+			@RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE) LocalDate to
 	) {
 		Long doctorId = resolveDoctorId(jwt);
-		List<AppointmentResponse> appointments = status == null
-				? appointmentService.listAppointments(doctorId)
-				: appointmentService.listAppointmentsByStatus(doctorId, status);
+		List<AppointmentResponse> appointments = appointmentService
+				.listFilteredAppointments(doctorId, status, from, to);
 		return ApiResponse.success(appointments);
 	}
 
