@@ -24,4 +24,8 @@ export class ApiService {
   patch<T>(path: string, body: unknown = null): Observable<ApiResponse<T>> {
     return this.http.patch<ApiResponse<T>>(path, body);
   }
+
+  delete<T>(path: string): Observable<ApiResponse<T>> {
+    return this.http.delete<ApiResponse<T>>(path);
+  }
 }
