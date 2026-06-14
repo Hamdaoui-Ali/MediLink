@@ -1,0 +1,78 @@
+<section class="appointments-shell">
+  <header class="appointments-header">
+    <div>
+      <a routerLink="/doctor" class="back-link">Doctor Dashboard</a>
+      <h1>My Appointments</h1>
+    </div>
+    <button type="button" class="secondary-action" (click)="loadAppointments()" [disabled]="isLoading()">
+      Refresh
+    </button>
+  </header>
+
+  <div class="filters-bar">
+    <label class="filter-field">
+      <span>Status</span>
+      <select [(ngModel)]="statusFilter" (change)="applyFilters()">
+        <option value="">All statuses</option>
+        @for (status of ALL_STATUSES; track status) {
+          <option [value]="status">{{ statusLabel(status) }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="filter-field">
+      <span>Date</span>
+      <input type="date" [(ngModel)]="dateFilter" (change)="applyFilters()" />
+    </label>
+
+    @if (statusFilter() || dateFilter()) {
+      <button type="button" class="secondary-action clear-filters" (click)="clearFilters()">
+        Clear filters
+      </button>
+    }
+  </div>
+
+  <div class="appointments-panel">
+    @if (isInitialLoad()) {
+      <p class="state-text">Loading appointments...</p>
+    } @else if (errorMessage()) {
+      <p class="error-text" role="alert">{{ errorMessage() }}</p>
+    } @else if (appointments().length === 0) {
+      <div class="empty-state">
+        <p class="state-text">No appointments match your filters.</p>
+      </div>
+    } @else {
+      <div class="table-info">
+        <p>{{ appointments().length }} appointment{{ appointments().length !== 1 ? 's' : '' }}</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Reason</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (appointment of appointments(); track appointment.id) {
+              <tr>
+                <td class="patient-cell">{{ appointment.patientName }}</td>
+                <td>{{ formatDate(appointment.appointmentDate) }}</td>
+                <td>{{ formatTime(appointment.startTime) }} - {{ formatTime(appointment.endTime) }}</td>
+                <td>{{ appointment.reason }}</td>
+                <td>
+                  <span class="status-pill" [class]="statusClass(appointment.status)">
+                    {{ statusLabel(appointment.status) }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</section>
