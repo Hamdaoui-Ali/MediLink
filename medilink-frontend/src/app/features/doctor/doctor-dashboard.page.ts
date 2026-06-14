@@ -11,6 +11,7 @@ import { RouterLink } from '@angular/router';
       <nav class="dashboard-links">
         <a routerLink="/doctor/appointments" class="dashboard-link">View My Appointments</a>
         <a routerLink="/doctor/blocked-slots" class="dashboard-link">Manage Blocked Slots</a>
+        <a routerLink="/doctor/profile" class="dashboard-link">My Profile</a>
       </nav>
     </section>
   `,

@@ -48,6 +48,13 @@ export const routes: Routes = [
       import('./features/doctor/doctor-blocked-slots.page').then((module) => module.DoctorBlockedSlotsPage)
   },
   {
+    path: 'doctor/profile',
+    canActivate: [authGuard],
+    data: { roles: ['DOCTOR'] },
+    loadComponent: () =>
+      import('./features/doctor/doctor-profile.page').then((module) => module.DoctorProfilePage)
+  },
+  {
     path: 'admin',
     canActivate: [authGuard],
     data: { roles: ['ADMIN'] },
