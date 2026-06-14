@@ -92,6 +92,28 @@ class DoctorBlockedSlotControllerTest {
 	}
 
 	@Test
+	void updateBlockedSlotUpdatesSlotForAuthenticatedDoctor() {
+		JwtAuthenticationToken jwt = createJwt(5L);
+		BlockedSlotService mockService = mock(BlockedSlotService.class);
+		com.medilink.medilink_backend.appointment.domain.DoctorRef doctor = mock(com.medilink.medilink_backend.appointment.domain.DoctorRef.class);
+		when(mockService.resolveDoctor(5L)).thenReturn(doctor);
+		when(doctor.getId()).thenReturn(1L);
+
+		BlockedSlotRequest request = new BlockedSlotRequest(
+				LocalDate.of(2026, 7, 1), LocalTime.of(9, 0), LocalTime.of(10, 0), "Updated"
+		);
+		BlockedSlotResponse expected = new BlockedSlotResponse(10L, 1L,
+				LocalDate.of(2026, 7, 1), LocalTime.of(9, 0), LocalTime.of(10, 0), "Updated");
+		when(mockService.updateBlockedSlot(1L, 10L, request)).thenReturn(expected);
+
+		DoctorBlockedSlotController controller = new DoctorBlockedSlotController(mockService);
+		ApiResponse<BlockedSlotResponse> response = controller.updateBlockedSlot(jwt, 10L, request);
+
+		assertTrue(response.success());
+		assertEquals("Updated", response.data().reason());
+	}
+
+	@Test
 	void allEndpointsRequireDoctorRole() {
 		PreAuthorize classAnnotation = DoctorBlockedSlotController.class.getAnnotation(PreAuthorize.class);
 

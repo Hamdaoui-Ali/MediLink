@@ -67,6 +67,23 @@ public class BlockedSlotService {
 	}
 
 	@Transactional
+	public BlockedSlotResponse updateBlockedSlot(Long doctorId, Long slotId, BlockedSlotRequest request) {
+		if (!request.endTime().isAfter(request.startTime())) {
+			throw new InvalidBlockedSlotException("End time must be after start time.");
+		}
+
+		if (request.blockDate().isBefore(java.time.LocalDate.now())) {
+			throw new InvalidBlockedSlotException("Cannot block slots in the past.");
+		}
+
+		BlockedSlot slot = blockedSlotRepository.findByIdAndDoctorId(slotId, doctorId)
+				.orElseThrow(() -> new BlockedSlotNotFoundException(slotId));
+
+		slot.update(request.blockDate(), request.startTime(), request.endTime(), request.reason());
+		return toResponse(slot);
+	}
+
+	@Transactional
 	public void deleteBlockedSlot(Long doctorId, Long slotId) {
 		BlockedSlot slot = blockedSlotRepository.findByIdAndDoctorId(slotId, doctorId)
 				.orElseThrow(() -> new BlockedSlotNotFoundException(slotId));

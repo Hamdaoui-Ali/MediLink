@@ -95,6 +95,13 @@ public class BlockedSlot {
 		this.active = false;
 	}
 
+	public void update(LocalDate blockDate, LocalTime startTime, LocalTime endTime, String reason) {
+		this.blockDate = blockDate;
+		this.startTime = startTime;
+		this.endTime = endTime;
+		this.reason = reason;
+	}
+
 	@PrePersist
 	void onPersist() {
 		Instant now = Instant.now();

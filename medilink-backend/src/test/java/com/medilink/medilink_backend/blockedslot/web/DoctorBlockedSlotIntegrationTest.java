@@ -169,6 +169,34 @@ class DoctorBlockedSlotIntegrationTest {
 	}
 
 	@Test
+	void doctorCanUpdateBlockedSlot() throws Exception {
+		jdbcTemplate.update(
+				"INSERT INTO blocked_slots (doctor_id, block_date, start_time, end_time, reason, is_active) VALUES (?, '2026-06-20', '10:00:00', '12:00:00', 'Vacation', TRUE)",
+				doctorId
+		);
+		Long slotId = jdbcTemplate.queryForObject(
+				"SELECT id FROM blocked_slots WHERE doctor_id = ? ORDER BY id DESC LIMIT 1", Long.class, doctorId);
+
+		ApiHttpResponse response = exchange(
+				HttpMethod.PATCH,
+				"/api/v1/doctor/blocked-slots/" + slotId,
+				doctorToken,
+				"""
+						{
+						  "blockDate": "2026-07-01",
+						  "startTime": "09:00:00",
+						  "endTime": "10:00:00",
+						  "reason": "Updated reason"
+						}
+						"""
+		);
+
+		assertEquals(HttpStatus.OK.value(), response.statusCode());
+		assertEquals("Updated reason", JsonPath.read(response.body(), "$.data.reason"));
+		assertEquals("2026-07-01", JsonPath.read(response.body(), "$.data.blockDate"));
+	}
+
+	@Test
 	void unauthenticatedUserCannotAccessBlockedSlots() throws Exception {
 		ApiHttpResponse response = exchange(HttpMethod.GET, "/api/v1/doctor/blocked-slots", null, null);
 

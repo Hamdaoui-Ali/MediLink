@@ -120,4 +120,44 @@ class BlockedSlotServiceTest {
 
 		assertThrows(BlockedSlotNotFoundException.class, () -> service.deleteBlockedSlot(1L, 99L));
 	}
+
+	@Test
+	void updateBlockedSlotUpdatesFields() {
+		BlockedSlot slot = new BlockedSlot(1L, LocalDate.of(2026, 6, 20),
+				LocalTime.of(10, 0), LocalTime.of(12, 0), "Old reason");
+		when(blockedSlotRepository.findByIdAndDoctorId(10L, 1L)).thenReturn(Optional.of(slot));
+
+		BlockedSlotRequest updateRequest = new BlockedSlotRequest(
+				LocalDate.now().plusDays(2), LocalTime.of(9, 0), LocalTime.of(11, 0), "Updated reason"
+		);
+
+		BlockedSlotResponse response = service.updateBlockedSlot(1L, 10L, updateRequest);
+
+		assertEquals(LocalDate.now().plusDays(2), response.blockDate());
+		assertEquals(LocalTime.of(9, 0), response.startTime());
+		assertEquals(LocalTime.of(11, 0), response.endTime());
+		assertEquals("Updated reason", response.reason());
+	}
+
+	@Test
+	void updateBlockedSlotRejectsEndTimeBeforeStartTime() {
+		BlockedSlotRequest request = new BlockedSlotRequest(
+				LocalDate.now().plusDays(1), LocalTime.of(12, 0), LocalTime.of(10, 0), "Invalid"
+		);
+
+		assertThrows(InvalidBlockedSlotException.class,
+				() -> service.updateBlockedSlot(1L, 10L, request));
+	}
+
+	@Test
+	void updateBlockedSlotThrowsWhenNotFound() {
+		when(blockedSlotRepository.findByIdAndDoctorId(99L, 1L)).thenReturn(Optional.empty());
+
+		BlockedSlotRequest request = new BlockedSlotRequest(
+				LocalDate.now().plusDays(1), LocalTime.of(10, 0), LocalTime.of(12, 0), "Test"
+		);
+
+		assertThrows(BlockedSlotNotFoundException.class,
+				() -> service.updateBlockedSlot(1L, 99L, request));
+	}
 }

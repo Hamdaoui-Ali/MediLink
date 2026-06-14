@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,6 +43,16 @@ public class DoctorBlockedSlotController {
 	) {
 		Long doctorId = resolveDoctorId(jwt);
 		return ApiResponse.success(blockedSlotService.createBlockedSlot(doctorId, request));
+	}
+
+	@PatchMapping("/{id}")
+	public ApiResponse<BlockedSlotResponse> updateBlockedSlot(
+			JwtAuthenticationToken jwt,
+			@PathVariable Long id,
+			@Valid @RequestBody BlockedSlotRequest request
+	) {
+		Long doctorId = resolveDoctorId(jwt);
+		return ApiResponse.success(blockedSlotService.updateBlockedSlot(doctorId, id, request));
 	}
 
 	@DeleteMapping("/{id}")
