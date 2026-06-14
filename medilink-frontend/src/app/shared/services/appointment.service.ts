@@ -30,4 +30,22 @@ export class AppointmentService {
       map((response) => (response.data ?? response) as Appointment[])
     );
   }
+
+  getAppointment(id: number): Observable<Appointment> {
+    return this.api.get<Appointment>(`/v1/doctor/appointments/${id}`).pipe(
+      map((response) => (response.data ?? response) as Appointment)
+    );
+  }
+
+  updateNotes(id: number, notes: string): Observable<Appointment> {
+    return this.api.patch<Appointment>(`/v1/doctor/appointments/${id}/notes`, { notes }).pipe(
+      map((response) => (response.data ?? response) as Appointment)
+    );
+  }
+
+  updateStatus(id: number, status: AppointmentStatus): Observable<Appointment> {
+    return this.api.patch<Appointment>(`/v1/doctor/appointments/${id}/status`, { status }).pipe(
+      map((response) => (response.data ?? response) as Appointment)
+    );
+  }
 }

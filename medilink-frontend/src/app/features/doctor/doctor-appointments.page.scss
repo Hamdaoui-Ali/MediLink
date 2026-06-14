@@ -21,14 +21,27 @@
   text-decoration: none;
 }
 
-h1,
-h2,
-p {
+h1, h2, h3, p {
   margin: 0;
 }
 
 h1 {
   font-size: 2rem;
+}
+
+h2 {
+  font-size: 1rem;
+}
+
+h3 {
+  font-size: 0.92rem;
+  color: #475467;
+  margin-bottom: 0.5rem;
+}
+
+.panel-heading p {
+  color: #667085;
+  font-size: 0.86rem;
 }
 
 .filters-bar {
@@ -64,9 +77,16 @@ h1 {
   align-self: flex-end;
 }
 
-.appointments-panel {
+.appointments-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.85fr);
+  gap: 1rem;
   max-width: 1180px;
   margin: 0 auto;
+}
+
+.appointments-list,
+.detail-panel {
   border: 1px solid #d9e2ec;
   border-radius: 8px;
   background: #ffffff;
@@ -74,14 +94,18 @@ h1 {
   overflow: hidden;
 }
 
-.table-info {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e6edf3;
+.appointments-list .panel-heading,
+.detail-panel .panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
 }
 
-.table-info p {
-  color: #667085;
-  font-size: 0.86rem;
+.detail-panel .panel-heading > div {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .table-wrap {
@@ -94,8 +118,7 @@ table {
   font-size: 0.92rem;
 }
 
-th,
-td {
+th, td {
   padding: 0.9rem 1rem;
   border-top: 1px solid #e6edf3;
   text-align: left;
@@ -106,6 +129,19 @@ th {
   color: #5b667a;
   font-size: 0.78rem;
   text-transform: uppercase;
+}
+
+tr {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+tr:hover {
+  background: #f8fafc;
+}
+
+tr.is-selected {
+  background: #edf7ff;
 }
 
 .patient-cell {
@@ -147,13 +183,95 @@ th {
   color: #5b21b6;
 }
 
-.state-text,
-.error-text {
-  padding: 1.5rem;
+.detail-body {
+  padding: 0 1rem 1.5rem;
+}
+
+.detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 0.9rem;
+}
+
+.detail-label {
+  color: #667085;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.detail-value {
   font-size: 0.92rem;
 }
 
+hr {
+  border: 0;
+  border-top: 1px solid #e6edf3;
+  margin: 1rem 0;
+}
+
+.status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.status-action {
+  min-height: 34px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 0.8rem;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.action-completed {
+  background: #16a34a;
+}
+
+.action-cancelled {
+  background: #64748b;
+}
+
+.action-missed {
+  background: #d97706;
+}
+
+.action-rescheduled {
+  background: #7c3aed;
+}
+
+.action-confirmed {
+  background: #2563eb;
+}
+
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0.72rem 0.82rem;
+  color: #172033;
+  font: inherit;
+  font-size: 0.88rem;
+  resize: vertical;
+  margin-bottom: 0.5rem;
+}
+
+.save-notes-btn {
+  width: 100%;
+}
+
+.state-text,
+.error-text {
+  font-size: 0.88rem;
+}
+
 .state-text {
+  padding: 1.5rem;
   color: #667085;
 }
 
@@ -164,9 +282,22 @@ th {
   margin: 0.75rem;
 }
 
-.empty-state {
-  text-align: center;
-  padding: 2rem 1rem;
+.form-error,
+.form-success {
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.88rem;
+  margin-top: 0.5rem;
+}
+
+.form-error {
+  background: #fff1f2;
+  color: #b42318;
+}
+
+.form-success {
+  background: #ecfdf3;
+  color: #067647;
 }
 
 button {
@@ -197,9 +328,12 @@ button:disabled {
   }
 
   .appointments-header,
-  .filters-bar,
-  .appointments-panel {
+  .filters-bar {
     max-width: none;
+  }
+
+  .appointments-grid {
+    grid-template-columns: 1fr;
   }
 
   .filters-bar {

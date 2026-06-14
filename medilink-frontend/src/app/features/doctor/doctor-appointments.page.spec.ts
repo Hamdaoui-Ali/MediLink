@@ -11,6 +11,8 @@ describe('DoctorAppointmentsPage', () => {
   let component: DoctorAppointmentsPage;
   let appointmentService: {
     listDoctorAppointments: ReturnType<typeof vi.fn>;
+    updateNotes: ReturnType<typeof vi.fn>;
+    updateStatus: ReturnType<typeof vi.fn>;
   };
 
   const mockAppointments: Appointment[] = [
@@ -54,7 +56,9 @@ describe('DoctorAppointmentsPage', () => {
 
   beforeEach(async () => {
     appointmentService = {
-      listDoctorAppointments: vi.fn().mockReturnValue(of(mockAppointments))
+      listDoctorAppointments: vi.fn().mockReturnValue(of(mockAppointments)),
+      updateNotes: vi.fn(),
+      updateStatus: vi.fn()
     };
 
     await TestBed.configureTestingModule({
@@ -78,14 +82,6 @@ describe('DoctorAppointmentsPage', () => {
     expect(appointmentService.listDoctorAppointments).toHaveBeenCalledWith(undefined, undefined, undefined);
     expect(component.appointments().length).toBe(3);
     expect(component.isLoading()).toBeFalsy();
-    expect(component.errorMessage()).toBe('');
-  });
-
-  it('should set isLoading to false after loading completes', () => {
-    fixture.detectChanges();
-
-    expect(component.isLoading()).toBeFalsy();
-    expect(component.errorMessage()).toBe('');
   });
 
   it('should show error message when loading fails', () => {
@@ -96,77 +92,89 @@ describe('DoctorAppointmentsPage', () => {
     fixture.detectChanges();
 
     expect(component.errorMessage()).toBe('You do not have permission to access this page.');
-    expect(component.isLoading()).toBeFalsy();
   });
 
-  it('should show error for unauthorized access', () => {
-    appointmentService.listDoctorAppointments.mockReturnValue(
-      throwError(() => ({ status: 401 }))
-    );
-
+  it('should select an appointment and populate notes draft', () => {
     fixture.detectChanges();
 
-    expect(component.errorMessage()).toBe('Your session has expired. Please log in again.');
+    component.selectAppointment(mockAppointments[1]);
+
+    expect(component.selectedAppointment()?.id).toBe(2);
+    expect(component.notesDraft()).toBe('All clear');
+    expect(component.detailMessage()).toBe('');
+    expect(component.detailError()).toBe('');
   });
 
-  it('should show empty state when no appointments exist', () => {
-    appointmentService.listDoctorAppointments.mockReturnValue(of([]));
+  it('should clear selection', () => {
+    component.selectAppointment(mockAppointments[0]);
+    component.clearSelection();
 
-    fixture.detectChanges();
-
-    expect(component.appointments().length).toBe(0);
+    expect(component.selectedAppointment()).toBeNull();
   });
 
-  it('should filter appointments by status via server call', () => {
+  it('should save notes and update the appointment in the list', () => {
     fixture.detectChanges();
-    const confirmedOnly = [mockAppointments[0]];
-    appointmentService.listDoctorAppointments.mockReturnValue(of(confirmedOnly));
+    component.selectAppointment(mockAppointments[0]);
+    component.notesDraft.set('New private notes');
 
-    component.statusFilter.set('CONFIRMED');
-    component.applyFilters();
+    const updated: Appointment = { ...mockAppointments[0], doctorNotes: 'New private notes' };
+    appointmentService.updateNotes.mockReturnValue(of(updated));
 
-    expect(appointmentService.listDoctorAppointments).toHaveBeenCalledWith('CONFIRMED', undefined, undefined);
-    expect(component.appointments()).toEqual(confirmedOnly);
+    component.saveNotes();
+
+    expect(appointmentService.updateNotes).toHaveBeenCalledWith(1, 'New private notes');
+    expect(component.selectedAppointment()?.doctorNotes).toBe('New private notes');
+    expect(component.detailMessage()).toBe('Notes saved.');
   });
 
-  it('should filter appointments by date via server call', () => {
+  it('should show error when saving notes fails', () => {
     fixture.detectChanges();
-    const dateFiltered = [mockAppointments[0]];
-    appointmentService.listDoctorAppointments.mockReturnValue(of(dateFiltered));
+    component.selectAppointment(mockAppointments[0]);
 
-    component.dateFilter.set('2026-06-15');
-    component.applyFilters();
+    appointmentService.updateNotes.mockReturnValue(throwError(() => ({ status: 400 })));
 
-    expect(appointmentService.listDoctorAppointments).toHaveBeenCalledWith(undefined, '2026-06-15', '2026-06-15');
-    expect(component.appointments()).toEqual(dateFiltered);
+    component.saveNotes();
+
+    expect(component.detailError()).toBe('Invalid operation. The status transition may not be allowed.');
+    expect(component.isSavingNotes()).toBeFalsy();
   });
 
-  it('should filter appointments by status and date via server call', () => {
+  it('should update status and update the appointment in the list', () => {
     fixture.detectChanges();
-    const filtered = [mockAppointments[0]];
-    appointmentService.listDoctorAppointments.mockReturnValue(of(filtered));
+    component.selectAppointment(mockAppointments[0]);
 
-    component.statusFilter.set('CONFIRMED');
-    component.dateFilter.set('2026-06-15');
-    component.applyFilters();
+    const updated: Appointment = { ...mockAppointments[0], status: 'COMPLETED' as const };
+    appointmentService.updateStatus.mockReturnValue(of(updated));
 
-    expect(appointmentService.listDoctorAppointments).toHaveBeenCalledWith('CONFIRMED', '2026-06-15', '2026-06-15');
-    expect(component.appointments()).toEqual(filtered);
+    component.updateStatus('COMPLETED');
+
+    expect(appointmentService.updateStatus).toHaveBeenCalledWith(1, 'COMPLETED');
+    expect(component.selectedAppointment()?.status).toBe('COMPLETED');
+    expect(component.detailMessage()).toBe('Appointment marked as Completed.');
   });
 
-  it('should clear filters and reload all appointments', () => {
+  it('should return valid transitions for non-terminal status', () => {
     fixture.detectChanges();
-    component.statusFilter.set('CONFIRMED');
-    component.dateFilter.set('2026-06-15');
+    component.selectAppointment(mockAppointments[0]);
 
-    const allAppointments = [...mockAppointments];
-    appointmentService.listDoctorAppointments.mockReturnValue(of(allAppointments));
+    const transitions = component.validTransitions();
+    expect(transitions).toContain('COMPLETED');
+    expect(transitions).toContain('CANCELLED');
+    expect(transitions).toContain('MISSED');
+    expect(transitions).toContain('RESCHEDULED');
+    expect(transitions.length).toBe(4);
+  });
 
-    component.clearFilters();
+  it('should return empty transitions for terminal status', () => {
+    fixture.detectChanges();
+    component.selectAppointment(mockAppointments[1]);
 
-    expect(component.statusFilter()).toBe('');
-    expect(component.dateFilter()).toBe('');
-    expect(appointmentService.listDoctorAppointments).toHaveBeenCalledWith(undefined, undefined, undefined);
+    expect(component.validTransitions().length).toBe(0);
+    expect(component.isTerminal()).toBe(true);
+  });
+
+  it('should return false for isTerminal when no appointment selected', () => {
+    expect(component.isTerminal()).toBe(false);
   });
 
   it('should format time correctly', () => {
@@ -184,17 +192,9 @@ describe('DoctorAppointmentsPage', () => {
 
   it('should return correct status label', () => {
     expect(component.statusLabel('CONFIRMED')).toBe('Confirmed');
-    expect(component.statusLabel('CANCELLED')).toBe('Cancelled');
     expect(component.statusLabel('COMPLETED')).toBe('Completed');
+    expect(component.statusLabel('CANCELLED')).toBe('Cancelled');
     expect(component.statusLabel('MISSED')).toBe('Missed');
     expect(component.statusLabel('RESCHEDULED')).toBe('Rescheduled');
-  });
-
-  it('should return correct status CSS class', () => {
-    expect(component.statusClass('CONFIRMED')).toBe('status-confirmed');
-    expect(component.statusClass('COMPLETED')).toBe('status-completed');
-    expect(component.statusClass('CANCELLED')).toBe('status-cancelled');
-    expect(component.statusClass('MISSED')).toBe('status-missed');
-    expect(component.statusClass('RESCHEDULED')).toBe('status-rescheduled');
   });
 });

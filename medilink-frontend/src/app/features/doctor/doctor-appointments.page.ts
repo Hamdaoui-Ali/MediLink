@@ -1,7 +1,13 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Appointment, AppointmentStatus, ALL_STATUSES } from '../../shared/models/appointment.model';
+import {
+  Appointment,
+  AppointmentStatus,
+  ALL_STATUSES,
+  STATUS_TRANSITIONS,
+  isTerminalStatus
+} from '../../shared/models/appointment.model';
 import { AppointmentService } from '../../shared/services/appointment.service';
 
 @Component({
@@ -21,6 +27,25 @@ export class DoctorAppointmentsPage implements OnInit {
   readonly errorMessage = signal('');
   readonly statusFilter = signal<AppointmentStatus | ''>('');
   readonly dateFilter = signal('');
+
+  readonly selectedAppointment = signal<Appointment | null>(null);
+  readonly notesDraft = signal('');
+  readonly isSavingNotes = signal(false);
+  readonly isUpdatingStatus = signal(false);
+  readonly detailMessage = signal('');
+  readonly detailError = signal('');
+
+  readonly validTransitions = computed(() => {
+    const selected = this.selectedAppointment();
+    if (!selected) return [];
+    return STATUS_TRANSITIONS[selected.status] ?? [];
+  });
+
+  readonly isTerminal = computed(() => {
+    const selected = this.selectedAppointment();
+    if (!selected) return false;
+    return isTerminalStatus(selected.status);
+  });
 
   ngOnInit(): void {
     this.loadAppointments();
@@ -53,6 +78,61 @@ export class DoctorAppointmentsPage implements OnInit {
     this.statusFilter.set('');
     this.dateFilter.set('');
     this.loadAppointments();
+  }
+
+  selectAppointment(appointment: Appointment): void {
+    this.selectedAppointment.set(appointment);
+    this.notesDraft.set(appointment.doctorNotes ?? '');
+    this.detailMessage.set('');
+    this.detailError.set('');
+  }
+
+  clearSelection(): void {
+    this.selectedAppointment.set(null);
+  }
+
+  saveNotes(): void {
+    const appointment = this.selectedAppointment();
+    if (!appointment) return;
+
+    this.isSavingNotes.set(true);
+    this.detailError.set('');
+    this.detailMessage.set('');
+
+    this.appointmentService.updateNotes(appointment.id, this.notesDraft()).subscribe({
+      next: (updated) => {
+        this.updateAppointmentInList(updated);
+        this.selectedAppointment.set(updated);
+        this.detailMessage.set('Notes saved.');
+        this.isSavingNotes.set(false);
+      },
+      error: (error) => {
+        this.detailError.set(this.getErrorMessage(error, 'Unable to save notes.'));
+        this.isSavingNotes.set(false);
+      }
+    });
+  }
+
+  updateStatus(newStatus: AppointmentStatus): void {
+    const appointment = this.selectedAppointment();
+    if (!appointment) return;
+
+    this.isUpdatingStatus.set(true);
+    this.detailError.set('');
+    this.detailMessage.set('');
+
+    this.appointmentService.updateStatus(appointment.id, newStatus).subscribe({
+      next: (updated) => {
+        this.updateAppointmentInList(updated);
+        this.selectedAppointment.set(updated);
+        this.detailMessage.set(`Appointment marked as ${this.statusLabel(newStatus)}.`);
+        this.isUpdatingStatus.set(false);
+      },
+      error: (error) => {
+        this.detailError.set(this.getErrorMessage(error, 'Unable to update appointment status.'));
+        this.isUpdatingStatus.set(false);
+      }
+    });
   }
 
   isInitialLoad(): boolean {
@@ -105,6 +185,12 @@ export class DoctorAppointmentsPage implements OnInit {
     return classes[status] ?? '';
   }
 
+  private updateAppointmentInList(updated: Appointment): void {
+    this.appointments.set(
+      this.appointments().map((a) => (a.id === updated.id ? updated : a))
+    );
+  }
+
   private getErrorMessage(error: unknown, fallback: string): string {
     if (typeof error === 'object' && error !== null && 'status' in error) {
       if (error.status === 403) {
@@ -112,6 +198,9 @@ export class DoctorAppointmentsPage implements OnInit {
       }
       if (error.status === 401) {
         return 'Your session has expired. Please log in again.';
+      }
+      if (error.status === 400) {
+        return 'Invalid operation. The status transition may not be allowed.';
       }
     }
     return fallback;

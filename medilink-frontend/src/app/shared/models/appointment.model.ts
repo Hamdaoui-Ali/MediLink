@@ -25,3 +25,15 @@ export const ALL_STATUSES: AppointmentStatus[] = [
   'MISSED',
   'RESCHEDULED'
 ];
+
+export const STATUS_TRANSITIONS: Record<AppointmentStatus, AppointmentStatus[]> = {
+  CONFIRMED: ['COMPLETED', 'CANCELLED', 'MISSED', 'RESCHEDULED'],
+  RESCHEDULED: ['CONFIRMED', 'COMPLETED', 'CANCELLED', 'MISSED'],
+  COMPLETED: [],
+  CANCELLED: [],
+  MISSED: []
+};
+
+export function isTerminalStatus(status: AppointmentStatus): boolean {
+  return STATUS_TRANSITIONS[status].length === 0;
+}
