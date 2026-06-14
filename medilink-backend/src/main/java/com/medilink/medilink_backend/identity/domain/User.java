@@ -91,4 +91,8 @@ public class User {
 	public void disable() {
 		this.accountStatus = AccountStatus.DISABLED;
 	}
+
+	public void updatePhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
 }
