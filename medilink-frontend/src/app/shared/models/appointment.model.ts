@@ -37,3 +37,10 @@ export const STATUS_TRANSITIONS: Record<AppointmentStatus, AppointmentStatus[]> 
 export function isTerminalStatus(status: AppointmentStatus): boolean {
   return STATUS_TRANSITIONS[status].length === 0;
 }
+
+export interface BookAppointmentRequest {
+  doctorId: number;
+  appointmentDate: string;
+  startTime: string;
+  reason: string;
+}

@@ -6,8 +6,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "doctors")
-public class DoctorRef {
+@Table(name = "patients")
+public class PatientRefEntity {
 
 	@Id
 	private Long id;
@@ -15,13 +15,7 @@ public class DoctorRef {
 	@Column(name = "user_id", nullable = false, updatable = false)
 	private Long userId;
 
-	@Column(nullable = false, length = 30)
-	private String status;
-
-	@Column(name = "consultation_duration_minutes", nullable = false)
-	private Integer consultationDurationMinutes;
-
-	protected DoctorRef() {}
+	protected PatientRefEntity() {}
 
 	public Long getId() {
 		return id;
@@ -29,13 +23,5 @@ public class DoctorRef {
 
 	public Long getUserId() {
 		return userId;
-	}
-
-	public String getStatus() {
-		return status;
-	}
-
-	public boolean isActive() {
-		return "ACTIVE".equals(status);
 	}
 }

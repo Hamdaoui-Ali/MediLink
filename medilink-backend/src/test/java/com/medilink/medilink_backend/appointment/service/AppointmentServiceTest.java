@@ -6,6 +6,7 @@ import com.medilink.medilink_backend.appointment.domain.DoctorRef;
 import com.medilink.medilink_backend.appointment.domain.PatientRef;
 import com.medilink.medilink_backend.appointment.repository.AppointmentRepository;
 import com.medilink.medilink_backend.appointment.repository.DoctorRefRepository;
+import com.medilink.medilink_backend.appointment.repository.PatientRefRepository;
 import com.medilink.medilink_backend.appointment.web.AppointmentResponse;
 import com.medilink.medilink_backend.patient.repository.PatientRepository;
 import org.junit.jupiter.api.Test;
@@ -25,8 +26,10 @@ class AppointmentServiceTest {
 
 	private final AppointmentRepository appointmentRepository = mock(AppointmentRepository.class);
 	private final DoctorRefRepository doctorRefRepository = mock(DoctorRefRepository.class);
+	private final PatientRefRepository patientRefRepository = mock(PatientRefRepository.class);
 	private final PatientRepository patientRepository = mock(PatientRepository.class);
-	private final AppointmentService service = new AppointmentService(appointmentRepository, doctorRefRepository, patientRepository);
+	private final AppointmentService service = new AppointmentService(
+			appointmentRepository, doctorRefRepository, patientRefRepository, patientRepository);
 
 	@Test
 	void resolveDoctorReturnsActiveDoctor() {

@@ -1,0 +1,101 @@
+<section class="booking-page">
+  <h2>Book an Appointment</h2>
+
+  @if (!bookedAppointment()) {
+    <form class="booking-form" (ngSubmit)="book()" #bookingForm="ngForm">
+      <div class="form-group">
+        <label for="doctorId">Doctor ID</label>
+        <input
+          id="doctorId"
+          type="number"
+          [(ngModel)]="doctorId"
+          name="doctorId"
+          required
+          min="1"
+          placeholder="Enter doctor ID"
+          [disabled]="isSubmitting()"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="appointmentDate">Appointment Date</label>
+        <input
+          id="appointmentDate"
+          type="date"
+          [(ngModel)]="appointmentDate"
+          name="appointmentDate"
+          required
+          [disabled]="isSubmitting()"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="startTime">Start Time</label>
+        <input
+          id="startTime"
+          type="time"
+          [(ngModel)]="startTime"
+          name="startTime"
+          required
+          [disabled]="isSubmitting()"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="reason">Reason for Visit</label>
+        <textarea
+          id="reason"
+          [(ngModel)]="reason"
+          name="reason"
+          required
+          rows="3"
+          placeholder="Briefly describe the reason for your visit"
+          [disabled]="isSubmitting()"
+        ></textarea>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="message message-error">{{ errorMessage() }}</div>
+      }
+
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="isSubmitting() || !doctorId() || !appointmentDate() || !startTime() || !reason().trim()"
+      >
+        @if (isSubmitting()) {
+          Booking...
+        } @else {
+          Confirm Booking
+        }
+      </button>
+    </form>
+  } @else {
+    <div class="confirmation">
+      <div class="confirmation-card">
+        <h3>Appointment Confirmed</h3>
+        <p class="success-badge">{{ successMessage() }}</p>
+
+        <dl class="appointment-details">
+          <dt>Doctor ID</dt>
+          <dd>{{ bookedAppointment()?.doctorId }}</dd>
+
+          <dt>Date</dt>
+          <dd>{{ formatDate(bookedAppointment()?.appointmentDate ?? '') }}</dd>
+
+          <dt>Time</dt>
+          <dd>{{ formatTime(bookedAppointment()?.startTime ?? '') }} - {{ formatTime(bookedAppointment()?.endTime ?? '') }}</dd>
+
+          <dt>Reason</dt>
+          <dd>{{ bookedAppointment()?.reason }}</dd>
+
+          <dt>Status</dt>
+          <dd><span class="status-badge status-confirmed">{{ bookedAppointment()?.status }}</span></dd>
+        </dl>
+
+        <button class="btn-primary" (click)="reset()">Book Another Appointment</button>
+        <a routerLink="/patient" class="btn-link">Back to Dashboard</a>
+      </div>
+    </div>
+  }
+</section>

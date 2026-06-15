@@ -4,14 +4,18 @@ import com.medilink.medilink_backend.appointment.domain.Appointment;
 import com.medilink.medilink_backend.appointment.domain.AppointmentStatus;
 import com.medilink.medilink_backend.appointment.domain.DoctorRef;
 import com.medilink.medilink_backend.appointment.domain.PatientRef;
+import com.medilink.medilink_backend.appointment.domain.PatientRefEntity;
 import com.medilink.medilink_backend.appointment.repository.AppointmentRepository;
 import com.medilink.medilink_backend.appointment.repository.DoctorRefRepository;
+import com.medilink.medilink_backend.appointment.repository.PatientRefRepository;
 import com.medilink.medilink_backend.appointment.web.AppointmentResponse;
 import com.medilink.medilink_backend.patient.repository.PatientRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -21,15 +25,18 @@ public class AppointmentService {
 
 	private final AppointmentRepository appointmentRepository;
 	private final DoctorRefRepository doctorRefRepository;
+	private final PatientRefRepository patientRefRepository;
 	private final PatientRepository patientRepository;
 
 	public AppointmentService(
 			AppointmentRepository appointmentRepository,
 			DoctorRefRepository doctorRefRepository,
+			PatientRefRepository patientRefRepository,
 			PatientRepository patientRepository
 	) {
 		this.appointmentRepository = appointmentRepository;
 		this.doctorRefRepository = doctorRefRepository;
+		this.patientRefRepository = patientRefRepository;
 		this.patientRepository = patientRepository;
 	}
 
@@ -42,6 +49,67 @@ public class AppointmentService {
 		}
 
 		return doctor;
+	}
+
+	public PatientRefEntity resolvePatient(Long userId) {
+		return patientRefRepository.findByUserId(userId)
+				.orElseThrow(() -> new PatientNotFoundException(userId));
+	}
+
+	@Transactional
+	public AppointmentResponse createAppointment(Long patientId, Long doctorId,
+			LocalDate appointmentDate, LocalTime startTime, String reason) {
+		if (appointmentDate.isBefore(LocalDate.now())) {
+			throw new SlotUnavailableException("Cannot book an appointment in the past.");
+		}
+
+		if (appointmentDate.equals(LocalDate.now()) && startTime.isBefore(LocalTime.now())) {
+			throw new SlotUnavailableException("Cannot book a time slot that has already passed today.");
+		}
+
+		DoctorRef doctor = doctorRefRepository.findById(doctorId)
+				.orElseThrow(() -> new DoctorRefNotFoundException(doctorId));
+
+		if (!doctor.isActive()) {
+			throw new SlotUnavailableException("The selected doctor is not currently available.");
+		}
+
+		int durationMinutes = doctorRefRepository.findConsultationDurationById(doctorId).orElse(30);
+
+		LocalTime endTime = startTime.plusMinutes(durationMinutes);
+
+		List<AppointmentStatus> activeStatuses = List.of(
+				AppointmentStatus.CONFIRMED, AppointmentStatus.RESCHEDULED);
+		List<Appointment> conflicts = appointmentRepository
+				.findByDoctorIdAndAppointmentDateAndStatusIn(doctorId, appointmentDate, activeStatuses);
+
+		for (Appointment existing : conflicts) {
+			if (startTime.isBefore(existing.getEndTime()) && endTime.isAfter(existing.getStartTime())) {
+				throw new SlotUnavailableException(
+						"This time slot is no longer available. Please choose another slot.");
+			}
+		}
+
+		Appointment appointment = new Appointment(
+				doctorId, patientId, appointmentDate, startTime, endTime, reason);
+		appointment = appointmentRepository.save(appointment);
+
+		return toResponse(appointment);
+	}
+
+	@Transactional(readOnly = true)
+	public List<AppointmentResponse> listPatientAppointments(Long patientId) {
+		List<Appointment> appointments = appointmentRepository
+				.findByPatientIdOrderByAppointmentDateDescStartTimeDesc(patientId);
+		return toResponses(appointments);
+	}
+
+	@Transactional(readOnly = true)
+	public AppointmentResponse getPatientAppointment(Long patientId, Long appointmentId) {
+		Appointment appointment = appointmentRepository.findById(appointmentId)
+				.filter(a -> a.getPatientId().equals(patientId))
+				.orElseThrow(() -> new AppointmentNotFoundException(appointmentId));
+		return toResponse(appointment);
 	}
 
 	@Transactional(readOnly = true)

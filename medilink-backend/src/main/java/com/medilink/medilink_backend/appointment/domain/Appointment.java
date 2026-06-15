@@ -7,6 +7,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
 import java.time.Instant;
@@ -53,6 +55,17 @@ public class Appointment {
 	private Instant updatedAt;
 
 	protected Appointment() {}
+
+	public Appointment(Long doctorId, Long patientId, LocalDate appointmentDate,
+			LocalTime startTime, LocalTime endTime, String reason) {
+		this.doctorId = doctorId;
+		this.patientId = patientId;
+		this.appointmentDate = appointmentDate;
+		this.startTime = startTime;
+		this.endTime = endTime;
+		this.status = AppointmentStatus.CONFIRMED;
+		this.reason = reason;
+	}
 
 	public Long getId() {
 		return id;
@@ -109,5 +122,17 @@ public class Appointment {
 
 	public void updateNotes(String notes) {
 		this.doctorNotes = notes;
+	}
+
+	@PrePersist
+	void onPersist() {
+		Instant now = Instant.now();
+		this.createdAt = now;
+		this.updatedAt = now;
+	}
+
+	@PreUpdate
+	void onUpdate() {
+		this.updatedAt = Instant.now();
 	}
 }

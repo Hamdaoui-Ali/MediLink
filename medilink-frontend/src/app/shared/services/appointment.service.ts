@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { Appointment, AppointmentStatus } from '../models/appointment.model';
+import { Appointment, AppointmentStatus, BookAppointmentRequest } from '../models/appointment.model';
 import { ApiService } from './api.service';
 
 @Injectable({
@@ -46,6 +46,18 @@ export class AppointmentService {
   updateStatus(id: number, status: AppointmentStatus): Observable<Appointment> {
     return this.api.patch<Appointment>(`/v1/doctor/appointments/${id}/status`, { status }).pipe(
       map((response) => (response.data ?? response) as Appointment)
+    );
+  }
+
+  bookAppointment(request: BookAppointmentRequest): Observable<Appointment> {
+    return this.api.post<Appointment>('/v1/patient/appointments', request).pipe(
+      map((response) => (response.data ?? response) as Appointment)
+    );
+  }
+
+  listPatientAppointments(): Observable<Appointment[]> {
+    return this.api.get<Appointment[]>('/v1/patient/appointments').pipe(
+      map((response) => (response.data ?? response) as Appointment[])
     );
   }
 }

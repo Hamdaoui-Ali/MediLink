@@ -5,6 +5,8 @@ import com.medilink.medilink_backend.administration.service.SpecialtyNotFoundExc
 import com.medilink.medilink_backend.appointment.service.AppointmentNotFoundException;
 import com.medilink.medilink_backend.appointment.service.DoctorRefNotFoundException;
 import com.medilink.medilink_backend.appointment.service.InvalidAppointmentStatusException;
+import com.medilink.medilink_backend.appointment.service.PatientNotFoundException;
+import com.medilink.medilink_backend.appointment.service.SlotUnavailableException;
 import com.medilink.medilink_backend.blockedslot.service.BlockedSlotNotFoundException;
 import com.medilink.medilink_backend.blockedslot.service.InvalidBlockedSlotException;
 import com.medilink.medilink_backend.doctor.service.DoctorNotFoundException;
@@ -127,6 +129,20 @@ public class GlobalExceptionHandler {
 	ResponseEntity<ApiResponse<Void>> handleInvalidAppointmentStatus(InvalidAppointmentStatusException exception) {
 		return ResponseEntity.badRequest().body(ApiResponse.failure(
 				new ApiError("INVALID_STATUS_TRANSITION", exception.getMessage(), Map.of())
+		));
+	}
+
+	@ExceptionHandler(PatientNotFoundException.class)
+	ResponseEntity<ApiResponse<Void>> handlePatientNotFound(PatientNotFoundException exception) {
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure(
+				new ApiError("PATIENT_NOT_FOUND", exception.getMessage(), Map.of())
+		));
+	}
+
+	@ExceptionHandler(SlotUnavailableException.class)
+	ResponseEntity<ApiResponse<Void>> handleSlotUnavailable(SlotUnavailableException exception) {
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.failure(
+				new ApiError("SLOT_UNAVAILABLE", exception.getMessage(), Map.of())
 		));
 	}
 
