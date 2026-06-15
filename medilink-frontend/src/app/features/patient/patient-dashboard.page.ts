@@ -9,7 +9,9 @@ import { RouterLink } from '@angular/router';
       <h2>Patient workspace</h2>
       <p>Prepared for doctor discovery, slot selection, booking flow, and appointment history.</p>
       <nav class="dashboard-links">
+        <a routerLink="/patient/doctors" class="dashboard-link">Find a Doctor</a>
         <a routerLink="/patient/book" class="dashboard-link">Book an Appointment</a>
+        <a routerLink="/patient/appointments" class="dashboard-link">My Appointments</a>
       </nav>
     </section>
   `,

@@ -1,0 +1,44 @@
+<section class="appointments-page">
+  <h2>My Appointments</h2>
+
+  @if (actionMessage()) { <div class="message message-success">{{ actionMessage() }}</div> }
+  @if (actionError()) { <div class="message message-error">{{ actionError() }}</div> }
+
+  @if (isLoading() && appointments().length === 0) {
+    <p class="loading">Loading appointments...</p>
+  } @else if (errorMessage() && appointments().length === 0) {
+    <div class="message message-error">{{ errorMessage() }}</div>
+    <button class="btn-primary" (click)="loadAppointments()">Retry</button>
+  } @else if (appointments().length === 0) {
+    <div class="message message-empty">No appointments yet.</div>
+    <a routerLink="/patient/doctors" class="btn-link">Find a Doctor</a>
+  } @else {
+    <div class="appointment-list">
+      @for (appointment of appointments(); track appointment.id) {
+        <div class="appointment-card">
+          <div class="card-header">
+            <span class="status-badge" [class]="statusClass(appointment.status)">
+              {{ statusLabel(appointment.status) }}
+            </span>
+            <span class="date">{{ formatDate(appointment.appointmentDate) }}</span>
+          </div>
+          <div class="card-body">
+            <p><strong>Doctor ID:</strong> {{ appointment.doctorId }}</p>
+            <p><strong>Time:</strong> {{ formatTime(appointment.startTime) }} - {{ formatTime(appointment.endTime) }}</p>
+            <p><strong>Reason:</strong> {{ appointment.reason }}</p>
+            @if (appointment.doctorNotes) {
+              <p class="notes"><strong>Notes:</strong> {{ appointment.doctorNotes }}</p>
+            }
+          </div>
+          @if (canCancel(appointment)) {
+            <button class="btn-cancel" (click)="cancelAppointment(appointment.id)" [disabled]="isCancelling()">
+              Cancel Appointment
+            </button>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <a routerLink="/patient" class="btn-link">Back to Dashboard</a>
+</section>

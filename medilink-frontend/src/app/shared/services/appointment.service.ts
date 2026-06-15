@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { Appointment, AppointmentStatus, BookAppointmentRequest } from '../models/appointment.model';
+import { Appointment, AppointmentStatus, BookAppointmentRequest, Slot } from '../models/appointment.model';
 import { ApiService } from './api.service';
 
 @Injectable({
@@ -58,6 +58,18 @@ export class AppointmentService {
   listPatientAppointments(): Observable<Appointment[]> {
     return this.api.get<Appointment[]>('/v1/patient/appointments').pipe(
       map((response) => (response.data ?? response) as Appointment[])
+    );
+  }
+
+  getDoctorSlots(doctorId: number, date: string): Observable<Slot[]> {
+    return this.api.get<Slot[]>(`/v1/patient/doctors/${doctorId}/slots?date=${date}`).pipe(
+      map((response) => (response.data ?? response) as Slot[])
+    );
+  }
+
+  cancelAppointment(id: number): Observable<Appointment> {
+    return this.api.patch<Appointment>(`/v1/patient/appointments/${id}/cancel`, null).pipe(
+      map((response) => (response.data ?? response) as Appointment)
     );
   }
 }

@@ -112,6 +112,64 @@ public class AppointmentService {
 		return toResponse(appointment);
 	}
 
+	@Transactional
+	public AppointmentResponse cancelAppointment(Long patientId, Long appointmentId) {
+		Appointment appointment = appointmentRepository.findById(appointmentId)
+				.filter(a -> a.getPatientId().equals(patientId))
+				.orElseThrow(() -> new AppointmentNotFoundException(appointmentId));
+
+		if (!appointment.getStatus().canTransitionTo(AppointmentStatus.CANCELLED)) {
+			throw new InvalidAppointmentStatusException(
+					"Cannot cancel appointment " + appointmentId + " with status " + appointment.getStatus());
+		}
+
+		appointment.updateStatus(AppointmentStatus.CANCELLED);
+		return toResponse(appointment);
+	}
+
+	@Transactional
+	public AppointmentResponse rescheduleAppointment(Long patientId, Long appointmentId,
+			LocalDate newDate, LocalTime newStartTime) {
+		Appointment appointment = appointmentRepository.findById(appointmentId)
+				.filter(a -> a.getPatientId().equals(patientId))
+				.orElseThrow(() -> new AppointmentNotFoundException(appointmentId));
+
+		if (!appointment.getStatus().canTransitionTo(AppointmentStatus.RESCHEDULED)) {
+			throw new InvalidAppointmentStatusException(
+					"Cannot reschedule appointment " + appointmentId + " with status " + appointment.getStatus());
+		}
+
+		if (newDate.isBefore(LocalDate.now())) {
+			throw new SlotUnavailableException("Cannot reschedule to a past date.");
+		}
+
+		Long doctorId = appointment.getDoctorId();
+		int durationMinutes = doctorRefRepository.findConsultationDurationById(doctorId).orElse(30);
+		LocalTime newEndTime = newStartTime.plusMinutes(durationMinutes);
+
+		List<AppointmentStatus> activeStatuses = List.of(
+				AppointmentStatus.CONFIRMED, AppointmentStatus.RESCHEDULED);
+		List<Appointment> conflicts = appointmentRepository
+				.findByDoctorIdAndAppointmentDateAndStatusIn(doctorId, newDate, activeStatuses);
+
+		for (Appointment existing : conflicts) {
+			if (!existing.getId().equals(appointmentId)
+					&& newStartTime.isBefore(existing.getEndTime())
+					&& newEndTime.isAfter(existing.getStartTime())) {
+				throw new SlotUnavailableException(
+						"The requested time slot is not available.");
+			}
+		}
+
+		appointment.updateStatus(AppointmentStatus.RESCHEDULED);
+
+		Appointment newAppointment = new Appointment(
+				doctorId, patientId, newDate, newStartTime, newEndTime, appointment.getReason());
+		newAppointment = appointmentRepository.save(newAppointment);
+
+		return toResponse(newAppointment);
+	}
+
 	@Transactional(readOnly = true)
 	public List<AppointmentResponse> listAppointments(Long doctorId) {
 		List<Appointment> appointments = appointmentRepository

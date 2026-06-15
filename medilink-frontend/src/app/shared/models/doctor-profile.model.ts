@@ -18,3 +18,12 @@ export interface DoctorProfileUpdateRequest {
   phoneNumber: string | null;
   consultationDurationMinutes: number | null;
 }
+
+export interface DoctorSummary {
+  id: number;
+  fullName: string;
+  specialtyName: string;
+  biography: string | null;
+  consultationDurationMinutes: number;
+  clinicAddress: string | null;
+}

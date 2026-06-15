@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Appointment } from '../../shared/models/appointment.model';
 import { AppointmentService } from '../../shared/services/appointment.service';
 
@@ -11,18 +11,38 @@ import { AppointmentService } from '../../shared/services/appointment.service';
   styleUrl: './patient-book-appointment.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PatientBookAppointmentPage {
+export class PatientBookAppointmentPage implements OnInit {
   private readonly appointmentService = inject(AppointmentService);
+  private readonly route = inject(ActivatedRoute);
 
   readonly doctorId = signal<number | null>(null);
   readonly appointmentDate = signal('');
   readonly startTime = signal('');
+  readonly endTime = signal('');
   readonly reason = signal('');
+  readonly preFilled = signal(false);
 
   readonly isSubmitting = signal(false);
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
   readonly bookedAppointment = signal<Appointment | null>(null);
+
+  ngOnInit(): void {
+    this.route.queryParams.subscribe((params) => {
+      const doctorId = Number(params['doctorId']);
+      const date = params['date'] as string | undefined;
+      const startTime = params['startTime'] as string | undefined;
+      const endTime = params['endTime'] as string | undefined;
+
+      if (doctorId > 0 && date && startTime) {
+        this.doctorId.set(doctorId);
+        this.appointmentDate.set(date);
+        this.startTime.set(startTime);
+        this.endTime.set(endTime ?? '');
+        this.preFilled.set(true);
+      }
+    });
+  }
 
   book(): void {
     const doctorId = this.doctorId();

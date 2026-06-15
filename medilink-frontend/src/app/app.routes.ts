@@ -34,6 +34,27 @@ export const routes: Routes = [
       import('./features/patient/patient-book-appointment.page').then((module) => module.PatientBookAppointmentPage)
   },
   {
+    path: 'patient/slots/:doctorId',
+    canActivate: [authGuard],
+    data: { roles: ['PATIENT'] },
+    loadComponent: () =>
+      import('./features/patient/patient-slot-selection.page').then((module) => module.PatientSlotSelectionPage)
+  },
+  {
+    path: 'patient/doctors',
+    canActivate: [authGuard],
+    data: { roles: ['PATIENT'] },
+    loadComponent: () =>
+      import('./features/patient/patient-doctor-search.page').then((module) => module.PatientDoctorSearchPage)
+  },
+  {
+    path: 'patient/appointments',
+    canActivate: [authGuard],
+    data: { roles: ['PATIENT'] },
+    loadComponent: () =>
+      import('./features/patient/patient-appointments.page').then((module) => module.PatientAppointmentsPage)
+  },
+  {
     path: 'doctor',
     canActivate: [authGuard],
     data: { roles: ['DOCTOR'] },

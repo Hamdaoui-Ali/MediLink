@@ -1,0 +1,55 @@
+<section class="slot-page">
+  <h2>Select an Appointment Slot</h2>
+  <p class="subtitle">Doctor ID: {{ doctorId() }}</p>
+
+  <div class="date-picker">
+    <label for="slotDate">Choose a date</label>
+    <div class="date-row">
+      <input
+        id="slotDate"
+        type="date"
+        [(ngModel)]="selectedDate"
+        [min]="minDate"
+        [disabled]="isLoading()"
+      />
+      <button class="btn-primary" (click)="loadSlots()" [disabled]="isLoading() || !selectedDate()">
+        @if (isLoading()) { Loading... } @else { Show Slots }
+      </button>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="message message-error">{{ errorMessage() }}</div>
+  }
+
+  @if (slots().length > 0) {
+    <div class="slot-grid">
+      <h3>Available slots for {{ formatDate(selectedDate()) }}</h3>
+      <div class="slots">
+        @for (slot of slots(); track slot.startTime) {
+          <button
+            class="slot-button"
+            [class.slot-selected]="selectedSlot()?.startTime === slot.startTime"
+            (click)="selectSlot(slot)"
+          >
+            {{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}
+          </button>
+        }
+      </div>
+
+      <button
+        class="btn-primary btn-proceed"
+        [disabled]="!selectedSlot()"
+        (click)="proceedToBooking()"
+      >
+        Book Selected Slot
+      </button>
+    </div>
+  } @else if (!isLoading() && selectedDate() && !errorMessage()) {
+    <div class="message message-empty">
+      No available slots for this date. Try another date.
+    </div>
+  }
+
+  <a routerLink="/patient" class="btn-link">Back to Dashboard</a>
+</section>
