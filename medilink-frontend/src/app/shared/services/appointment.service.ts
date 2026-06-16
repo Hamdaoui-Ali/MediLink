@@ -55,8 +55,9 @@ export class AppointmentService {
     );
   }
 
-  listPatientAppointments(): Observable<Appointment[]> {
-    return this.api.get<Appointment[]>('/v1/patient/appointments').pipe(
+  listPatientAppointments(filter?: string): Observable<Appointment[]> {
+    const path = filter ? `/v1/patient/appointments?filter=${filter}` : '/v1/patient/appointments';
+    return this.api.get<Appointment[]>(path).pipe(
       map((response) => (response.data ?? response) as Appointment[])
     );
   }

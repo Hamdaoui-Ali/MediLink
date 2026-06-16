@@ -1,12 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import {
-  Appointment,
-  AppointmentStatus,
-  ALL_STATUSES,
-  isTerminalStatus
-} from '../../shared/models/appointment.model';
+import { Appointment, AppointmentStatus } from '../../shared/models/appointment.model';
 import { AppointmentService } from '../../shared/services/appointment.service';
 
 @Component({
@@ -20,13 +15,22 @@ export class PatientAppointmentsPage implements OnInit {
   private readonly appointmentService = inject(AppointmentService);
 
   readonly appointments = signal<Appointment[]>([]);
+  readonly activeTab = signal<'all' | 'upcoming' | 'past'>('all');
   readonly isLoading = signal(false);
   readonly errorMessage = signal('');
   readonly actionMessage = signal('');
   readonly actionError = signal('');
   readonly isCancelling = signal(false);
+  readonly confirmCancelId = signal<number | null>(null);
 
   ngOnInit(): void {
+    this.loadAppointments();
+  }
+
+  setTab(tab: 'all' | 'upcoming' | 'past'): void {
+    this.activeTab.set(tab);
+    this.actionMessage.set('');
+    this.actionError.set('');
     this.loadAppointments();
   }
 
@@ -34,7 +38,8 @@ export class PatientAppointmentsPage implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    this.appointmentService.listPatientAppointments().subscribe({
+    const filter = this.activeTab() === 'all' ? undefined : this.activeTab();
+    this.appointmentService.listPatientAppointments(filter).subscribe({
       next: (appointments) => {
         this.appointments.set(appointments);
         this.isLoading.set(false);
@@ -46,10 +51,19 @@ export class PatientAppointmentsPage implements OnInit {
     });
   }
 
+  confirmCancel(id: number): void {
+    this.confirmCancelId.set(id);
+  }
+
+  dismissConfirm(): void {
+    this.confirmCancelId.set(null);
+  }
+
   cancelAppointment(id: number): void {
     this.isCancelling.set(true);
     this.actionError.set('');
     this.actionMessage.set('');
+    this.confirmCancelId.set(null);
 
     this.appointmentService.cancelAppointment(id).subscribe({
       next: (updated) => {
@@ -66,11 +80,6 @@ export class PatientAppointmentsPage implements OnInit {
 
   canCancel(appointment: Appointment): boolean {
     return appointment.status === 'CONFIRMED' || appointment.status === 'RESCHEDULED';
-  }
-
-  isUpcoming(appointment: Appointment): boolean {
-    const today = new Date().toISOString().split('T')[0];
-    return appointment.appointmentDate >= today;
   }
 
   formatDate(date: string): string {

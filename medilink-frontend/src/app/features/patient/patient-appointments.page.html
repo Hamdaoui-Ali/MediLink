@@ -1,6 +1,12 @@
 <section class="appointments-page">
   <h2>My Appointments</h2>
 
+  <nav class="tabs">
+    <button [class.tab-active]="activeTab() === 'all'" (click)="setTab('all')">All</button>
+    <button [class.tab-active]="activeTab() === 'upcoming'" (click)="setTab('upcoming')">Upcoming</button>
+    <button [class.tab-active]="activeTab() === 'past'" (click)="setTab('past')">Past</button>
+  </nav>
+
   @if (actionMessage()) { <div class="message message-success">{{ actionMessage() }}</div> }
   @if (actionError()) { <div class="message message-error">{{ actionError() }}</div> }
 
@@ -10,7 +16,7 @@
     <div class="message message-error">{{ errorMessage() }}</div>
     <button class="btn-primary" (click)="loadAppointments()">Retry</button>
   } @else if (appointments().length === 0) {
-    <div class="message message-empty">No appointments yet.</div>
+    <div class="message message-empty">No appointments found.</div>
     <a routerLink="/patient/doctors" class="btn-link">Find a Doctor</a>
   } @else {
     <div class="appointment-list">
@@ -31,9 +37,22 @@
             }
           </div>
           @if (canCancel(appointment)) {
-            <button class="btn-cancel" (click)="cancelAppointment(appointment.id)" [disabled]="isCancelling()">
-              Cancel Appointment
-            </button>
+            @if (confirmCancelId() === appointment.id) {
+              <div class="confirm-dialog">
+                <p>Are you sure you want to cancel this appointment?</p>
+                <button class="btn-cancel" (click)="cancelAppointment(appointment.id)" [disabled]="isCancelling()">
+                  Yes, Cancel
+                </button>
+                <button class="btn-secondary" (click)="dismissConfirm()">No, Keep It</button>
+              </div>
+            } @else {
+              <button class="btn-cancel" (click)="confirmCancel(appointment.id)">
+                Cancel Appointment
+              </button>
+              <a class="btn-link" [routerLink]="['/patient/slots', appointment.doctorId]">
+                Reschedule
+              </a>
+            }
           }
         </div>
       }

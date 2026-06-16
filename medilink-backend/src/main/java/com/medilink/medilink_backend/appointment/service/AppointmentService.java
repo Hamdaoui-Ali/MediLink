@@ -98,9 +98,23 @@ public class AppointmentService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<AppointmentResponse> listPatientAppointments(Long patientId) {
-		List<Appointment> appointments = appointmentRepository
-				.findByPatientIdOrderByAppointmentDateDescStartTimeDesc(patientId);
+	public List<AppointmentResponse> listPatientAppointments(Long patientId, String filter) {
+		List<Appointment> appointments;
+		LocalDate today = LocalDate.now();
+
+		if ("upcoming".equalsIgnoreCase(filter)) {
+			appointments = appointmentRepository
+					.findByPatientIdAndAppointmentDateGreaterThanEqualOrderByAppointmentDateAscStartTimeAsc(
+							patientId, today);
+		} else if ("past".equalsIgnoreCase(filter)) {
+			appointments = appointmentRepository
+					.findByPatientIdAndAppointmentDateLessThanOrderByAppointmentDateDescStartTimeDesc(
+							patientId, today);
+		} else {
+			appointments = appointmentRepository
+					.findByPatientIdOrderByAppointmentDateDescStartTimeDesc(patientId);
+		}
+
 		return toResponses(appointments);
 	}
 

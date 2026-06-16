@@ -45,10 +45,11 @@ public class PatientAppointmentController {
 
 	@GetMapping
 	public ApiResponse<List<AppointmentResponse>> listAppointments(
-			JwtAuthenticationToken jwt
+			JwtAuthenticationToken jwt,
+			@RequestParam(required = false) String filter
 	) {
 		Long patientId = resolvePatientId(jwt);
-		List<AppointmentResponse> appointments = appointmentService.listPatientAppointments(patientId);
+		List<AppointmentResponse> appointments = appointmentService.listPatientAppointments(patientId, filter);
 		return ApiResponse.success(appointments);
 	}
 
