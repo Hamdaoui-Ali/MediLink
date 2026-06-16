@@ -4,20 +4,26 @@ import com.medilink.medilink_backend.appointment.domain.Appointment;
 import com.medilink.medilink_backend.appointment.domain.AppointmentStatus;
 import com.medilink.medilink_backend.appointment.domain.DoctorRef;
 import com.medilink.medilink_backend.appointment.domain.PatientRef;
+import com.medilink.medilink_backend.appointment.domain.PatientRefEntity;
 import com.medilink.medilink_backend.appointment.repository.AppointmentRepository;
 import com.medilink.medilink_backend.appointment.repository.DoctorRefRepository;
 import com.medilink.medilink_backend.appointment.repository.PatientRefRepository;
 import com.medilink.medilink_backend.appointment.web.AppointmentResponse;
+import com.medilink.medilink_backend.notification.domain.Notification;
+import com.medilink.medilink_backend.notification.domain.NotificationType;
+import com.medilink.medilink_backend.notification.repository.NotificationRepository;
 import com.medilink.medilink_backend.patient.repository.PatientRepository;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -28,8 +34,10 @@ class AppointmentServiceTest {
 	private final DoctorRefRepository doctorRefRepository = mock(DoctorRefRepository.class);
 	private final PatientRefRepository patientRefRepository = mock(PatientRefRepository.class);
 	private final PatientRepository patientRepository = mock(PatientRepository.class);
+	private final NotificationRepository notificationRepository = mock(NotificationRepository.class);
 	private final AppointmentService service = new AppointmentService(
-			appointmentRepository, doctorRefRepository, patientRefRepository, patientRepository);
+			appointmentRepository, doctorRefRepository, patientRefRepository,
+			patientRepository, notificationRepository);
 
 	@Test
 	void resolveDoctorReturnsActiveDoctor() {
@@ -255,5 +263,74 @@ class AppointmentServiceTest {
 
 		assertThrows(AppointmentNotFoundException.class,
 				() -> service.updateNotes(1L, 10L, "Some notes"));
+	}
+
+	@Test
+	void createAppointmentAlsoCreatesConfirmationNotification() {
+		DoctorRef doctor = mock(DoctorRef.class);
+		when(doctor.isActive()).thenReturn(true);
+		when(doctorRefRepository.findById(5L)).thenReturn(Optional.of(doctor));
+		when(doctorRefRepository.findConsultationDurationById(5L)).thenReturn(Optional.of(30));
+		when(appointmentRepository.findByDoctorIdAndAppointmentDateAndStatusIn(
+				any(Long.class), any(LocalDate.class), any(List.class)))
+				.thenReturn(List.of());
+
+		Appointment saved = mock(Appointment.class);
+		when(saved.getId()).thenReturn(100L);
+		when(appointmentRepository.save(any(Appointment.class))).thenReturn(saved);
+
+		PatientRefEntity patientRef = mock(PatientRefEntity.class);
+		when(patientRef.getUserId()).thenReturn(200L);
+		when(patientRefRepository.findById(3L)).thenReturn(Optional.of(patientRef));
+
+		AppointmentResponse response = service.createAppointment(
+				3L, 5L, LocalDate.now().plusDays(1), LocalTime.of(9, 0), "Checkup");
+
+		assertEquals(100L, response.id());
+		verify(notificationRepository).save(any(Notification.class));
+	}
+
+	@Test
+	void bookingSucceedsEvenWhenNotificationCreationFails() {
+		DoctorRef doctor = mock(DoctorRef.class);
+		when(doctor.isActive()).thenReturn(true);
+		when(doctorRefRepository.findById(5L)).thenReturn(Optional.of(doctor));
+		when(doctorRefRepository.findConsultationDurationById(5L)).thenReturn(Optional.of(30));
+		when(appointmentRepository.findByDoctorIdAndAppointmentDateAndStatusIn(
+				any(Long.class), any(LocalDate.class), any(List.class)))
+				.thenReturn(List.of());
+
+		Appointment saved = mock(Appointment.class);
+		when(saved.getId()).thenReturn(101L);
+		when(appointmentRepository.save(any(Appointment.class))).thenReturn(saved);
+
+		when(patientRefRepository.findById(3L)).thenThrow(new RuntimeException("DB error"));
+
+		AppointmentResponse response = service.createAppointment(
+				3L, 5L, LocalDate.now().plusDays(1), LocalTime.of(10, 0), "Checkup");
+
+		assertEquals(101L, response.id());
+	}
+
+	@Test
+	void bookingSucceedsWhenPatientRefNotFoundForNotification() {
+		DoctorRef doctor = mock(DoctorRef.class);
+		when(doctor.isActive()).thenReturn(true);
+		when(doctorRefRepository.findById(5L)).thenReturn(Optional.of(doctor));
+		when(doctorRefRepository.findConsultationDurationById(5L)).thenReturn(Optional.of(30));
+		when(appointmentRepository.findByDoctorIdAndAppointmentDateAndStatusIn(
+				any(Long.class), any(LocalDate.class), any(List.class)))
+				.thenReturn(List.of());
+
+		Appointment saved = mock(Appointment.class);
+		when(saved.getId()).thenReturn(102L);
+		when(appointmentRepository.save(any(Appointment.class))).thenReturn(saved);
+
+		when(patientRefRepository.findById(3L)).thenReturn(Optional.empty());
+
+		AppointmentResponse response = service.createAppointment(
+				3L, 5L, LocalDate.now().plusDays(1), LocalTime.of(11, 0), "Checkup");
+
+		assertEquals(102L, response.id());
 	}
 }

@@ -9,7 +9,12 @@ import com.medilink.medilink_backend.appointment.repository.AppointmentRepositor
 import com.medilink.medilink_backend.appointment.repository.DoctorRefRepository;
 import com.medilink.medilink_backend.appointment.repository.PatientRefRepository;
 import com.medilink.medilink_backend.appointment.web.AppointmentResponse;
+import com.medilink.medilink_backend.notification.domain.Notification;
+import com.medilink.medilink_backend.notification.domain.NotificationType;
+import com.medilink.medilink_backend.notification.repository.NotificationRepository;
 import com.medilink.medilink_backend.patient.repository.PatientRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,21 +28,26 @@ import java.util.stream.Collectors;
 @Service
 public class AppointmentService {
 
+	private static final Logger log = LoggerFactory.getLogger(AppointmentService.class);
+
 	private final AppointmentRepository appointmentRepository;
 	private final DoctorRefRepository doctorRefRepository;
 	private final PatientRefRepository patientRefRepository;
 	private final PatientRepository patientRepository;
+	private final NotificationRepository notificationRepository;
 
 	public AppointmentService(
 			AppointmentRepository appointmentRepository,
 			DoctorRefRepository doctorRefRepository,
 			PatientRefRepository patientRefRepository,
-			PatientRepository patientRepository
+			PatientRepository patientRepository,
+			NotificationRepository notificationRepository
 	) {
 		this.appointmentRepository = appointmentRepository;
 		this.doctorRefRepository = doctorRefRepository;
 		this.patientRefRepository = patientRefRepository;
 		this.patientRepository = patientRepository;
+		this.notificationRepository = notificationRepository;
 	}
 
 	public DoctorRef resolveDoctor(Long userId) {
@@ -94,7 +104,30 @@ public class AppointmentService {
 				doctorId, patientId, appointmentDate, startTime, endTime, reason);
 		appointment = appointmentRepository.save(appointment);
 
+		createConfirmationNotification(patientId, appointment.getId());
+
 		return toResponse(appointment);
+	}
+
+	private void createConfirmationNotification(Long patientId, Long appointmentId) {
+		try {
+			PatientRefEntity patientRef = patientRefRepository.findById(patientId).orElse(null);
+			if (patientRef == null) {
+				log.warn("Cannot create confirmation notification: patient {} not found", patientId);
+				return;
+			}
+
+			Notification notification = new Notification(
+					patientRef.getUserId(),
+					appointmentId,
+					NotificationType.APPOINTMENT_CONFIRMATION,
+					"pending@medilink.local",
+					"Appointment confirmed"
+			);
+			notificationRepository.save(notification);
+		} catch (Exception e) {
+			log.error("Failed to create confirmation notification for appointment {}", appointmentId, e);
+		}
 	}
 
 	@Transactional(readOnly = true)
