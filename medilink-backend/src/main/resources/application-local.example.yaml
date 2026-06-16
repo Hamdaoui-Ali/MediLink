@@ -1,0 +1,7 @@
+# Copy this file to application-local.yaml and customize for your environment.
+# This file is not tracked in git — never commit real secrets.
+
+medilink:
+  security:
+    jwt:
+      secret: local-development-jwt-secret-key-32chars

@@ -3,6 +3,17 @@ spring:
     name: medilink-backend
   profiles:
     default: local
+  mail:
+    host: ${MEDILINK_MAIL_HOST:localhost}
+    port: ${MEDILINK_MAIL_PORT:1025}
+    username: ${MEDILINK_MAIL_USERNAME:}
+    password: ${MEDILINK_MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${MEDILINK_MAIL_AUTH:false}
+      mail.smtp.starttls.enable: ${MEDILINK_MAIL_STARTTLS:false}
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
 
 server:
   servlet:
@@ -22,4 +33,6 @@ management:
 medilink:
   security:
     jwt:
-      secret: ${MEDILINK_JWT_SECRET:local-development-secret-key-for-medilink-jwt-signing-32}
+      secret: ${MEDILINK_JWT_SECRET}
+  notifications:
+    from-address: ${MEDILINK_NOTIFICATION_FROM:noreply@medilink.local}
