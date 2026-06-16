@@ -83,15 +83,20 @@ class AppointmentSchedulerIntegrationTest {
 		Long pId = patientId;
 		jdbcTemplate.update(
 				"INSERT INTO appointments (doctor_id, patient_id, appointment_date, start_time, end_time, status, reason) VALUES (?, ?, ?, '09:00:00', '09:30:00', 'CONFIRMED', 'Scheduled today')",
-				doctorId, patientId, today);
+				doctorId, pId, today);
+		Long appt1Id = jdbcTemplate.queryForObject(
+				"SELECT id FROM appointments WHERE reason = 'Scheduled today'", Long.class);
 		jdbcTemplate.update(
 				"INSERT INTO appointments (doctor_id, patient_id, appointment_date, start_time, end_time, status, reason) VALUES (?, ?, ?, '10:00:00', '10:30:00', 'CONFIRMED', 'Scheduled tomorrow')",
-				doctorId, patientId, tomorrow);
+				doctorId, pId, tomorrow);
+		Long appt2Id = jdbcTemplate.queryForObject(
+				"SELECT id FROM appointments WHERE reason = 'Scheduled tomorrow'", Long.class);
 
 		appointmentScheduler.checkUpcomingAppointments();
 
 		Integer count = jdbcTemplate.queryForObject(
-				"SELECT COUNT(*) FROM notifications WHERE type = 'APPOINTMENT_REMINDER'", Integer.class);
+				"SELECT COUNT(*) FROM notifications WHERE type = 'APPOINTMENT_REMINDER' AND appointment_id IN (?, ?)",
+				Integer.class, appt1Id, appt2Id);
 		assertEquals(2, count);
 	}
 
