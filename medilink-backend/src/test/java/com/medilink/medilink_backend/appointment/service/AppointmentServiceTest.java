@@ -333,4 +333,34 @@ class AppointmentServiceTest {
 
 		assertEquals(102L, response.id());
 	}
+
+	@Test
+	void updateStatusRejectsTransitionFromCancelled() {
+		Appointment appointment = mock(Appointment.class);
+		when(appointment.getStatus()).thenReturn(AppointmentStatus.CANCELLED);
+		when(appointmentRepository.findByIdAndDoctorId(10L, 1L)).thenReturn(Optional.of(appointment));
+
+		assertThrows(InvalidAppointmentStatusException.class,
+				() -> service.updateStatus(1L, 10L, AppointmentStatus.CONFIRMED));
+	}
+
+	@Test
+	void updateStatusRejectsTransitionFromMissed() {
+		Appointment appointment = mock(Appointment.class);
+		when(appointment.getStatus()).thenReturn(AppointmentStatus.MISSED);
+		when(appointmentRepository.findByIdAndDoctorId(10L, 1L)).thenReturn(Optional.of(appointment));
+
+		assertThrows(InvalidAppointmentStatusException.class,
+				() -> service.updateStatus(1L, 10L, AppointmentStatus.CONFIRMED));
+	}
+
+	@Test
+	void updateStatusRejectsRescheduledToRescheduled() {
+		Appointment appointment = mock(Appointment.class);
+		when(appointment.getStatus()).thenReturn(AppointmentStatus.RESCHEDULED);
+		when(appointmentRepository.findByIdAndDoctorId(10L, 1L)).thenReturn(Optional.of(appointment));
+
+		assertThrows(InvalidAppointmentStatusException.class,
+				() -> service.updateStatus(1L, 10L, AppointmentStatus.RESCHEDULED));
+	}
 }
