@@ -1,0 +1,43 @@
+<div class="app-shell">
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Healthcare scheduling platform</p>
+      <h1>MediLink</h1>
+    </div>
+    <nav class="topbar__nav">
+      <a routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Overview</a>
+      <a routerLink="/patient" routerLinkActive="is-active">Patient</a>
+      <a routerLink="/doctor" routerLinkActive="is-active">Doctor</a>
+      <a routerLink="/admin" routerLinkActive="is-active">Admin</a>
+      @if (authService.isAuthenticated()) {
+        <button type="button" (click)="authService.logout()">Logout</button>
+      } @else {
+        <a routerLink="/register" routerLinkActive="is-active">Register</a>
+        <a routerLink="/login" routerLinkActive="is-active">Login</a>
+      }
+    </nav>
+  </header>
+
+  <main class="workspace">
+    <aside class="sidebar">
+      <app-page-header
+        title="Foundation Ready"
+        subtitle="Routing, environments, shared services, and role-oriented pages are in place for the MVP."
+      />
+
+      <section class="sidebar__card">
+        <h2>Access scope</h2>
+        <ul>
+          <li>Login screen connected to the API layer</li>
+          <li>JWT token attached to protected API calls</li>
+          <li>Route guards protecting role workspaces</li>
+          <li>Role-based redirection for admin, doctor, and patient users</li>
+        </ul>
+      </section>
+    </aside>
+
+    <section class="content">
+      <router-outlet />
+    </section>
+  </main>
+</div>

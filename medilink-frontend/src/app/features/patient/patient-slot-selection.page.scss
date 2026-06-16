@@ -1,0 +1,124 @@
+.slot-page {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.subtitle {
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin: 0 0 1.25rem;
+}
+
+.date-picker {
+  margin-bottom: 1.25rem;
+}
+
+.date-picker label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+}
+
+.date-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.date-row input[type="date"] {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  flex: 1;
+}
+
+.message {
+  padding: 0.6rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.message-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.message-empty {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+  padding: 1.25rem;
+}
+
+.slot-grid {
+  margin-top: 1rem;
+}
+
+.slot-grid h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.slots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.slot-button {
+  padding: 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.slot-button:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.slot-selected {
+  background: #dbeafe;
+  border-color: #3b82f6;
+  color: #1e40af;
+  font-weight: 700;
+}
+
+.btn-primary {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  background: #1d4ed8;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.btn-primary:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}
+
+.btn-proceed {
+  width: 100%;
+}
+
+.btn-link {
+  display: inline-block;
+  margin-top: 1.25rem;
+  color: #1d4ed8;
+  font-weight: 600;
+  text-decoration: none;
+}

@@ -1,0 +1,81 @@
+<section class="registration-layout">
+  <div class="registration-summary">
+    <p class="eyebrow">Patient access</p>
+    <h2>Create your MediLink patient account.</h2>
+    <p>
+      Register once, then use your account to search doctors, book available slots, and track appointments.
+    </p>
+  </div>
+
+  <form class="registration-form" [formGroup]="registrationForm" (ngSubmit)="submit()" novalidate>
+    <div class="registration-form__header">
+      <p class="eyebrow">New patient</p>
+      <h3>Register</h3>
+    </div>
+
+    <label>
+      <span>Full name</span>
+      <input type="text" formControlName="fullName" autocomplete="name" />
+    </label>
+    @if (hasError('fullName')) {
+      <p class="field-error">Full name is required.</p>
+    }
+
+    <label>
+      <span>Email</span>
+      <input type="email" formControlName="email" autocomplete="email" />
+    </label>
+    @if (hasError('email')) {
+      <p class="field-error">Enter a valid email address.</p>
+    }
+
+    <label>
+      <span>Password</span>
+      <input type="password" formControlName="password" autocomplete="new-password" />
+    </label>
+    @if (hasError('password')) {
+      <p class="field-error">Password must be at least 8 characters.</p>
+    }
+
+    <label>
+      <span>Phone number</span>
+      <input type="tel" formControlName="phoneNumber" autocomplete="tel" />
+    </label>
+    @if (hasError('phoneNumber')) {
+      <p class="field-error">Phone number is required.</p>
+    }
+
+    <div class="registration-form__grid">
+      <label>
+        <span>Date of birth</span>
+        <input type="date" formControlName="dateOfBirth" />
+      </label>
+
+      <label>
+        <span>Gender</span>
+        <select formControlName="gender">
+          <option value="">Prefer not to say</option>
+          @for (gender of genders; track gender) {
+            <option [value]="gender">{{ gender }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <label>
+      <span>Address</span>
+      <textarea formControlName="address" rows="3"></textarea>
+    </label>
+
+    @if (errorMessage()) {
+      <p class="form-error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    @if (successMessage()) {
+      <p class="form-success" role="status">{{ successMessage() }}</p>
+    }
+
+    <button type="submit" [disabled]="registrationForm.invalid || isSubmitting()">{{ submitLabel() }}</button>
+    <a routerLink="/login">Already have an account?</a>
+  </form>
+</section>

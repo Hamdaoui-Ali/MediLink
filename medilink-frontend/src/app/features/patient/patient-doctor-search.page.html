@@ -1,0 +1,47 @@
+<section class="search-page">
+  <h2>Find a Doctor</h2>
+
+  <div class="search-bar">
+    <input
+      type="text"
+      [(ngModel)]="searchName"
+      placeholder="Search by doctor name..."
+      (keyup.enter)="loadDoctors()"
+      [disabled]="isLoading()"
+    />
+    <button class="btn-primary" (click)="loadDoctors()" [disabled]="isLoading()">
+      @if (isLoading()) { Searching... } @else { Search }
+    </button>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="message message-error">{{ errorMessage() }}</div>
+  }
+
+  @if (doctors().length > 0) {
+    <div class="doctor-list">
+      @for (doctor of doctors(); track doctor.id) {
+        <div class="doctor-card">
+          <h3>{{ doctor.fullName }}</h3>
+          <span class="specialty-badge">{{ doctor.specialtyName }}</span>
+          @if (doctor.biography) {
+            <p class="bio">{{ doctor.biography }}</p>
+          }
+          <div class="meta">
+            <span>{{ doctor.consultationDurationMinutes }} min consultations</span>
+            @if (doctor.clinicAddress) {
+              <span>{{ doctor.clinicAddress }}</span>
+            }
+          </div>
+          <a [routerLink]="['/patient/slots', doctor.id]" class="btn-primary btn-select">
+            View Available Slots
+          </a>
+        </div>
+      }
+    </div>
+  } @else if (!isLoading() && !errorMessage()) {
+    <div class="message message-empty">No doctors found. Try a different search.</div>
+  }
+
+  <a routerLink="/patient" class="btn-link">Back to Dashboard</a>
+</section>

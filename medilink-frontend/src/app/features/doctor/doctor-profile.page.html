@@ -1,0 +1,98 @@
+<section class="profile-shell">
+  <header class="profile-header">
+    <div>
+      <a routerLink="/doctor" class="back-link">Doctor Dashboard</a>
+      <h1>My Profile</h1>
+    </div>
+  </header>
+
+  <div class="profile-panel">
+    @if (isLoading()) {
+      <p class="state-text">Loading profile...</p>
+    } @else if (errorMessage()) {
+      <p class="error-text" role="alert">{{ errorMessage() }}</p>
+    } @else if (profile(); as profile) {
+      <div class="profile-grid">
+        <div class="info-section">
+          <h2>Account Information</h2>
+          <div class="info-field">
+            <span class="info-label">Full Name</span>
+            <span class="info-value">{{ profile.fullName }}</span>
+          </div>
+          <div class="info-field">
+            <span class="info-label">Email</span>
+            <span class="info-value">{{ profile.email }}</span>
+          </div>
+          <div class="info-field">
+            <span class="info-label">Specialty</span>
+            <span class="info-value">{{ profile.specialtyName }}</span>
+          </div>
+          <div class="info-field">
+            <span class="info-label">Account Status</span>
+            <span class="info-value">
+              <span class="status-badge" [class.inactive]="profile.accountStatus !== 'ACTIVE'">
+                {{ profile.accountStatus }}
+              </span>
+            </span>
+          </div>
+          <div class="info-field">
+            <span class="info-label">Doctor Status</span>
+            <span class="info-value">
+              <span class="status-badge" [class.inactive]="profile.status !== 'ACTIVE'">
+                {{ profile.status }}
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <form class="edit-section" [formGroup]="editForm" (ngSubmit)="saveProfile()" novalidate>
+          <h2>Edit Profile</h2>
+
+          <label>
+            <span>Biography</span>
+            <textarea formControlName="biography" rows="4" placeholder="Tell patients about your experience..."></textarea>
+          </label>
+          @if (hasError('biography')) {
+            <p class="field-error">Biography must be 2000 characters or fewer.</p>
+          }
+
+          <label>
+            <span>Clinic Address</span>
+            <input type="text" formControlName="clinicAddress" placeholder="123 Medical Drive" autocomplete="off" />
+          </label>
+          @if (hasError('clinicAddress')) {
+            <p class="field-error">Clinic address must be 500 characters or fewer.</p>
+          }
+
+          <label>
+            <span>Phone Number</span>
+            <input type="text" formControlName="phoneNumber" placeholder="+15551234567" autocomplete="off" />
+          </label>
+
+          <label>
+            <span>Consultation Duration (minutes)</span>
+            <input type="number" formControlName="consultationDurationMinutes" min="5" />
+          </label>
+          @if (hasError('consultationDurationMinutes')) {
+            <p class="field-error">Consultation duration must be at least 5 minutes.</p>
+          }
+
+          <p class="hint-text">
+            Your full name, email, specialty, and status can only be changed by an administrator.
+          </p>
+
+          @if (errorMessage()) {
+            <p class="form-error" role="alert">{{ errorMessage() }}</p>
+          }
+          @if (successMessage()) {
+            <p class="form-success" role="status">{{ successMessage() }}</p>
+          }
+
+          <button type="submit" [disabled]="isSaving()">
+            {{ isSaving() ? 'Saving...' : 'Save Changes' }}
+          </button>
+        </form>
+      </div>
+    }
+  </div>
+</section>

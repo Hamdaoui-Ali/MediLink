@@ -1,0 +1,101 @@
+<section class="blocked-shell">
+  <header class="blocked-header">
+    <div>
+      <a routerLink="/doctor" class="back-link">Doctor Dashboard</a>
+      <h1>Blocked Slots</h1>
+    </div>
+    <button type="button" class="secondary-action" (click)="loadBlockedSlots()" [disabled]="isLoading()">
+      Refresh
+    </button>
+  </header>
+
+  <div class="blocked-grid">
+    <form class="blocked-form" [formGroup]="slotForm" (ngSubmit)="createBlockedSlot()" novalidate>
+      <div class="panel-heading">
+        <h2>Block Time</h2>
+        <p>Prevent patients from booking during this period.</p>
+      </div>
+
+      <label>
+        <span>Date</span>
+        <input type="date" formControlName="blockDate" [min]="getMinDate()" />
+      </label>
+      @if (hasError('blockDate')) {
+        <p class="field-error">Date is required.</p>
+      }
+
+      <div class="time-row">
+        <label>
+          <span>Start Time</span>
+          <input type="time" formControlName="startTime" />
+        </label>
+        <label>
+          <span>End Time</span>
+          <input type="time" formControlName="endTime" />
+        </label>
+      </div>
+      @if (hasError('startTime')) {
+        <p class="field-error">Start time is required.</p>
+      }
+      @if (hasError('endTime')) {
+        <p class="field-error">End time is required.</p>
+      }
+
+      <label>
+        <span>Reason (optional)</span>
+        <input type="text" formControlName="reason" placeholder="e.g. Vacation, conference" autocomplete="off" />
+      </label>
+
+      @if (errorMessage()) {
+        <p class="form-error" role="alert">{{ errorMessage() }}</p>
+      }
+      @if (successMessage()) {
+        <p class="form-success" role="status">{{ successMessage() }}</p>
+      }
+
+      <button type="submit" [disabled]="isSaving()">
+        {{ isSaving() ? 'Saving...' : 'Block Slot' }}
+      </button>
+    </form>
+
+    <section class="blocked-list" aria-labelledby="blocked-list-title">
+      <div class="panel-heading">
+        <h2 id="blocked-list-title">Existing Blocked Slots</h2>
+        <p>{{ blockedSlots().length }} total</p>
+      </div>
+
+      @if (isLoading()) {
+        <p class="state-text">Loading blocked slots...</p>
+      } @else if (blockedSlots().length === 0) {
+        <p class="state-text">No blocked slots yet.</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Reason</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (slot of blockedSlots(); track slot.id) {
+                <tr>
+                  <td>{{ formatDate(slot.blockDate) }}</td>
+                  <td>{{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}</td>
+                  <td>{{ slot.reason || 'No reason provided' }}</td>
+                  <td class="actions">
+                    <button type="button" class="danger-action" (click)="deleteBlockedSlot(slot)">
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  </div>
+</section>

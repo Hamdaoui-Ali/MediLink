@@ -1,0 +1,149 @@
+.registration-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
+  gap: 1.5rem;
+}
+
+.registration-summary,
+.registration-form {
+  border: 1px solid rgba(20, 33, 61, 0.08);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.registration-summary {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 32rem;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  color: #ffffff;
+  background:
+    linear-gradient(rgba(38, 70, 83, 0.76), rgba(38, 70, 83, 0.72)),
+    url('https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=1200&q=80') center/cover;
+}
+
+.registration-summary h2 {
+  max-width: 12ch;
+  margin: 0 0 1rem;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  line-height: 0.96;
+}
+
+.registration-summary p:last-child {
+  max-width: 32rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.7;
+}
+
+.registration-form {
+  display: grid;
+  gap: 0.8rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.registration-form__header h3 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.registration-form__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.45rem;
+  color: #2a9d8f;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+label {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 2.85rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid #cad5df;
+  border-radius: 8px;
+  color: #14213d;
+  font: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #2a9d8f;
+  outline: 3px solid rgba(42, 157, 143, 0.18);
+}
+
+.field-error,
+.form-error {
+  margin: -0.35rem 0 0;
+  color: #b42318;
+  font-size: 0.9rem;
+}
+
+.form-error,
+.form-success {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+}
+
+.form-error {
+  background: #fff1f0;
+}
+
+.form-success {
+  color: #05603a;
+  background: #ecfdf3;
+}
+
+button {
+  min-height: 3rem;
+  border: 0;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #264653;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+a {
+  color: #264653;
+  font-weight: 700;
+  text-align: center;
+}
+
+@media (max-width: 920px) {
+  .registration-layout,
+  .registration-form__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .registration-summary {
+    min-height: 18rem;
+  }
+}

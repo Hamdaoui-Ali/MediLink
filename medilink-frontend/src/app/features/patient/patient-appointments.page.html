@@ -1,0 +1,63 @@
+<section class="appointments-page">
+  <h2>My Appointments</h2>
+
+  <nav class="tabs">
+    <button [class.tab-active]="activeTab() === 'all'" (click)="setTab('all')">All</button>
+    <button [class.tab-active]="activeTab() === 'upcoming'" (click)="setTab('upcoming')">Upcoming</button>
+    <button [class.tab-active]="activeTab() === 'past'" (click)="setTab('past')">Past</button>
+  </nav>
+
+  @if (actionMessage()) { <div class="message message-success">{{ actionMessage() }}</div> }
+  @if (actionError()) { <div class="message message-error">{{ actionError() }}</div> }
+
+  @if (isLoading() && appointments().length === 0) {
+    <p class="loading">Loading appointments...</p>
+  } @else if (errorMessage() && appointments().length === 0) {
+    <div class="message message-error">{{ errorMessage() }}</div>
+    <button class="btn-primary" (click)="loadAppointments()">Retry</button>
+  } @else if (appointments().length === 0) {
+    <div class="message message-empty">No appointments found.</div>
+    <a routerLink="/patient/doctors" class="btn-link">Find a Doctor</a>
+  } @else {
+    <div class="appointment-list">
+      @for (appointment of appointments(); track appointment.id) {
+        <div class="appointment-card">
+          <div class="card-header">
+            <span class="status-badge" [class]="statusClass(appointment.status)">
+              {{ statusLabel(appointment.status) }}
+            </span>
+            <span class="date">{{ formatDate(appointment.appointmentDate) }}</span>
+          </div>
+          <div class="card-body">
+            <p><strong>Doctor ID:</strong> {{ appointment.doctorId }}</p>
+            <p><strong>Time:</strong> {{ formatTime(appointment.startTime) }} - {{ formatTime(appointment.endTime) }}</p>
+            <p><strong>Reason:</strong> {{ appointment.reason }}</p>
+            @if (appointment.doctorNotes) {
+              <p class="notes"><strong>Notes:</strong> {{ appointment.doctorNotes }}</p>
+            }
+          </div>
+          @if (canCancel(appointment)) {
+            @if (confirmCancelId() === appointment.id) {
+              <div class="confirm-dialog">
+                <p>Are you sure you want to cancel this appointment?</p>
+                <button class="btn-cancel" (click)="cancelAppointment(appointment.id)" [disabled]="isCancelling()">
+                  Yes, Cancel
+                </button>
+                <button class="btn-secondary" (click)="dismissConfirm()">No, Keep It</button>
+              </div>
+            } @else {
+              <button class="btn-cancel" (click)="confirmCancel(appointment.id)">
+                Cancel Appointment
+              </button>
+              <a class="btn-link" [routerLink]="['/patient/slots', appointment.doctorId]">
+                Reschedule
+              </a>
+            }
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <a routerLink="/patient" class="btn-link">Back to Dashboard</a>
+</section>
