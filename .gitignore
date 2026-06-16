@@ -29,6 +29,7 @@ Thumbs.db
 # Workspace metadata
 .codex/
 .gemini/
+opencode.json*
 
 # Local development config (contains secrets)
 application-local.yaml
