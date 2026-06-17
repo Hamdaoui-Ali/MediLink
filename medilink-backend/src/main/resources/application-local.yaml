@@ -15,6 +15,11 @@ logging:
   level:
     root: INFO
 
+medilink:
+  security:
+    jwt:
+      secret: local-development-jwt-secret-key-32chars
+
 springdoc:
   api-docs:
     enabled: false
