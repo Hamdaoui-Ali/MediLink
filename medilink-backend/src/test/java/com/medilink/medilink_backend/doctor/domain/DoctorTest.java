@@ -18,7 +18,7 @@ class DoctorTest {
 		Specialty newSpecialty = new Specialty("Cardiology", null);
 		Doctor doctor = new Doctor(user, oldSpecialty, "Old bio", 30, "Old clinic");
 
-		doctor.update(newSpecialty, "New bio", 45, "New clinic");
+		doctor.updateAdminFields(newSpecialty, "New bio", 45, "New clinic");
 
 		assertEquals(newSpecialty, doctor.getSpecialty());
 		assertEquals("New bio", doctor.getBiography());
@@ -33,12 +33,12 @@ class DoctorTest {
 
 		doctor.deactivate();
 
-		assertEquals(DoctorStatus.INACTIVE, doctor.getStatus());
+		assertEquals("INACTIVE", doctor.getStatus());
 		assertEquals(AccountStatus.INACTIVE, user.getAccountStatus());
 
 		doctor.activate();
 
-		assertEquals(DoctorStatus.ACTIVE, doctor.getStatus());
+		assertEquals("ACTIVE", doctor.getStatus());
 		assertEquals(AccountStatus.ACTIVE, user.getAccountStatus());
 	}
 }

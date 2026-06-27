@@ -1,6 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { AdminDoctor, AdminDoctorRequest } from '../models/admin-doctor.model';
+import {
+  AdminDoctor,
+  AdminDoctorCreateRequest,
+  AdminDoctorUpdateRequest
+} from '../models/admin-doctor.model';
 import { ApiService } from './api.service';
 
 @Injectable({
@@ -15,13 +19,13 @@ export class AdminDoctorManagementService {
     );
   }
 
-  create(request: AdminDoctorRequest): Observable<AdminDoctor> {
+  create(request: AdminDoctorCreateRequest): Observable<AdminDoctor> {
     return this.api.post<AdminDoctor>('/v1/admin/doctors', request).pipe(
       map((response) => (response.data ?? response) as AdminDoctor)
     );
   }
 
-  update(id: number, request: AdminDoctorRequest): Observable<AdminDoctor> {
+  update(id: number, request: AdminDoctorUpdateRequest): Observable<AdminDoctor> {
     return this.api.put<AdminDoctor>(`/v1/admin/doctors/${id}`, request).pipe(
       map((response) => (response.data ?? response) as AdminDoctor)
     );

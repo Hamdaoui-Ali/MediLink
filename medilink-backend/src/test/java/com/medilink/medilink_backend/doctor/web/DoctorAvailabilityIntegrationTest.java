@@ -75,7 +75,7 @@ class DoctorAvailabilityIntegrationTest {
 		assertEquals(1, ((java.util.List<?>) JsonPath.read(list.body(), "$.data")).size());
 
 		ApiHttpResponse updated = exchange(
-				HttpMethod.PUT,
+				HttpMethod.PATCH,
 				"/api/v1/doctor/availability/" + slotId.longValue(),
 				doctorToken,
 				"""
@@ -91,8 +91,7 @@ class DoctorAvailabilityIntegrationTest {
 				doctorToken,
 				null
 		);
-		assertEquals(HttpStatus.OK.value(), deactivated.statusCode());
-		assertEquals(false, JsonPath.read(deactivated.body(), "$.data.isActive"));
+		assertEquals(HttpStatus.NO_CONTENT.value(), deactivated.statusCode());
 
 		ApiHttpResponse listAfterDelete = exchange(HttpMethod.GET, "/api/v1/doctor/availability", doctorToken, null);
 		assertEquals(0, ((java.util.List<?>) JsonPath.read(listAfterDelete.body(), "$.data")).size());
@@ -116,7 +115,7 @@ class DoctorAvailabilityIntegrationTest {
 		Number slotId = JsonPath.read(created.body(), "$.data.id");
 
 		ApiHttpResponse otherDoctorTriesToUpdate = exchange(
-				HttpMethod.PUT,
+				HttpMethod.PATCH,
 				"/api/v1/doctor/availability/" + slotId.longValue(),
 				token2,
 				"""

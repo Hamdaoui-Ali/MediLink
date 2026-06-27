@@ -9,7 +9,7 @@ import jakarta.persistence.Table;
 
 import java.time.LocalTime;
 
-@Entity
+@Entity(name = "DoctorWeeklyAvailability")
 @Table(name = "doctor_availability")
 public class DoctorAvailability {
 

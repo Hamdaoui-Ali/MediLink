@@ -2,7 +2,6 @@ package com.medilink.medilink_backend.doctor.service;
 
 import com.medilink.medilink_backend.doctor.domain.Doctor;
 import com.medilink.medilink_backend.doctor.domain.DoctorAvailability;
-import com.medilink.medilink_backend.doctor.domain.DoctorStatus;
 import com.medilink.medilink_backend.doctor.repository.DoctorAvailabilityRepository;
 import com.medilink.medilink_backend.doctor.repository.DoctorRepository;
 import com.medilink.medilink_backend.doctor.web.DoctorAvailabilityRequest;
@@ -14,7 +13,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
-@Service
+@Service("doctorWeeklyAvailabilityService")
 public class DoctorAvailabilityService {
 
 	private final DoctorAvailabilityRepository availabilityRepository;
@@ -33,7 +32,7 @@ public class DoctorAvailabilityService {
 		Doctor doctor = doctorRepository.findByUserId(userId)
 				.orElseThrow(() -> new DoctorNotFoundException(userId));
 
-		if (doctor.getStatus() != DoctorStatus.ACTIVE) {
+		if (!doctor.isActive()) {
 			throw new DoctorNotFoundException(userId);
 		}
 

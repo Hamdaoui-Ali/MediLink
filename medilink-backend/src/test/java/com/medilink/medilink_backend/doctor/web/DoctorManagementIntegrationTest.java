@@ -128,7 +128,7 @@ class DoctorManagementIntegrationTest {
 		);
 
 		assertEquals(HttpStatus.BAD_REQUEST.value(), missingPassword.statusCode());
-		assertEquals("INVALID_DOCTOR_REQUEST", JsonPath.read(missingPassword.body(), "$.error.code"));
+		assertEquals("VALIDATION_ERROR", JsonPath.read(missingPassword.body(), "$.error.code"));
 
 		ApiHttpResponse firstCreate = exchange(
 				HttpMethod.POST,

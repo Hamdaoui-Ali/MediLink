@@ -2,7 +2,6 @@ package com.medilink.medilink_backend.doctor.service;
 
 import com.medilink.medilink_backend.doctor.domain.Doctor;
 import com.medilink.medilink_backend.doctor.domain.DoctorAvailability;
-import com.medilink.medilink_backend.doctor.domain.DoctorStatus;
 import com.medilink.medilink_backend.doctor.repository.DoctorAvailabilityRepository;
 import com.medilink.medilink_backend.doctor.repository.DoctorRepository;
 import com.medilink.medilink_backend.doctor.web.DoctorAvailabilityRequest;
@@ -31,7 +30,7 @@ class DoctorAvailabilityServiceTest {
 	@Test
 	void resolveDoctorReturnsActiveDoctorByUserId() {
 		Doctor doctor = mock(Doctor.class);
-		when(doctor.getStatus()).thenReturn(DoctorStatus.ACTIVE);
+		when(doctor.isActive()).thenReturn(true);
 		when(doctor.getId()).thenReturn(1L);
 		when(doctorRepository.findByUserId(5L)).thenReturn(Optional.of(doctor));
 
@@ -50,7 +49,7 @@ class DoctorAvailabilityServiceTest {
 	@Test
 	void resolveDoctorThrowsWhenDoctorIsInactive() {
 		Doctor doctor = mock(Doctor.class);
-		when(doctor.getStatus()).thenReturn(DoctorStatus.INACTIVE);
+		when(doctor.isActive()).thenReturn(false);
 		when(doctorRepository.findByUserId(5L)).thenReturn(Optional.of(doctor));
 
 		assertThrows(DoctorNotFoundException.class, () -> service.resolveDoctor(5L));
