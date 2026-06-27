@@ -105,7 +105,7 @@ CREATE TABLE blocked_slots (
             WHEN is_active THEN CONCAT(block_date, ' ', start_time, ' ', end_time)
             ELSE NULL
         END
-    ),
+    ) STORED,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
@@ -130,7 +130,7 @@ CREATE TABLE appointments (
             WHEN status IN ('CONFIRMED', 'COMPLETED', 'MISSED') THEN CONCAT(appointment_date, ' ', start_time)
             ELSE NULL
         END
-    ),
+    ) STORED,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
