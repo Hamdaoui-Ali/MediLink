@@ -80,6 +80,16 @@ public class User {
 		return accountStatus;
 	}
 
+	public void updateProfile(String fullName, String email, String phoneNumber) {
+		this.fullName = fullName;
+		this.email = email;
+		this.phoneNumber = phoneNumber;
+	}
+
+	public void updatePasswordHash(String passwordHash) {
+		this.passwordHash = passwordHash;
+	}
+
 	public void activate() {
 		this.accountStatus = AccountStatus.ACTIVE;
 	}
