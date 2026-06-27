@@ -1,0 +1,53 @@
+<section class="admin-dashboard">
+  <header class="admin-dashboard__header">
+    <h1>Admin Console</h1>
+    <p class="admin-dashboard__subtitle">Manage platform reference data, users, and monitor operations.</p>
+  </header>
+
+  <!-- Stats overview -->
+  <div class="stats-row">
+    <div class="card stat-card">
+      <span class="stat-card__icon">&#127973;</span>
+      <div>
+        <p class="stat-card__value">{{ activeSpecialties() }}</p>
+        <p class="stat-card__label">Active Specialties</p>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <span class="stat-card__icon">&#9888;&#65039;</span>
+      <div>
+        <p class="stat-card__value">{{ inactiveSpecialties() }}</p>
+        <p class="stat-card__label">Inactive Specialties</p>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <span class="stat-card__icon">&#128736;</span>
+      <div>
+        <p class="stat-card__value">{{ specialties().length }}</p>
+        <p class="stat-card__label">Total Specialties</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Management modules -->
+  <h2 class="admin-dashboard__section-title">Management Modules</h2>
+  <div class="module-grid">
+    @for (module of modules; track module.label) {
+      @if (module.route) {
+        <a [routerLink]="module.route" class="card module-card">
+          <span class="module-card__icon">{{ module.icon }}</span>
+          <h3 class="module-card__title">{{ module.label }}</h3>
+          <p class="module-card__desc">{{ module.description }}</p>
+          <span class="module-card__cta">Manage &rarr;</span>
+        </a>
+      } @else if (module.comingSoon) {
+        <div class="card module-card module-card--soon">
+          <span class="module-card__icon">{{ module.icon }}</span>
+          <h3 class="module-card__title">{{ module.label }}</h3>
+          <p class="module-card__desc">{{ module.description }}</p>
+          <span class="badge badge-muted module-card__badge">Coming Soon</span>
+        </div>
+      }
+    }
+  </div>
+</section>

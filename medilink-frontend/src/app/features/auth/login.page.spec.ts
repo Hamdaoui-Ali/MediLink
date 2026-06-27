@@ -80,7 +80,7 @@ describe('LoginPage', () => {
 
     component.submit();
 
-    expect(component.errorMessage()).toBe('Login service failed. Restart the backend and make sure database migrations ran.');
+    expect(component.errorMessage()).toBe('The service is temporarily unavailable. Please try again in a moment.');
     expect(component.isSubmitting()).toBeFalsy();
   });
 });

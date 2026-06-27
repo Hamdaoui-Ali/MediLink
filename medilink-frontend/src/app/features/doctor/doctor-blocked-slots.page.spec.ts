@@ -12,6 +12,7 @@ describe('DoctorBlockedSlotsPage', () => {
   let blockedSlotService: {
     listDoctorBlockedSlots: ReturnType<typeof vi.fn>;
     createBlockedSlot: ReturnType<typeof vi.fn>;
+    updateBlockedSlot: ReturnType<typeof vi.fn>;
     deleteBlockedSlot: ReturnType<typeof vi.fn>;
   };
 
@@ -38,6 +39,7 @@ describe('DoctorBlockedSlotsPage', () => {
     blockedSlotService = {
       listDoctorBlockedSlots: vi.fn().mockReturnValue(of(mockSlots)),
       createBlockedSlot: vi.fn(),
+      updateBlockedSlot: vi.fn(),
       deleteBlockedSlot: vi.fn()
     };
 
@@ -93,7 +95,7 @@ describe('DoctorBlockedSlotsPage', () => {
       endTime: '17:00',
       reason: 'Conference'
     });
-    component.createBlockedSlot();
+    component.saveBlockedSlot();
 
     expect(blockedSlotService.createBlockedSlot).toHaveBeenCalledWith({
       blockDate: '2026-08-01',
@@ -112,9 +114,38 @@ describe('DoctorBlockedSlotsPage', () => {
       endTime: '',
       reason: ''
     });
-    component.createBlockedSlot();
+    component.saveBlockedSlot();
 
     expect(blockedSlotService.createBlockedSlot).not.toHaveBeenCalled();
+  });
+
+  it('should edit a blocked slot and update it in the list', () => {
+    fixture.detectChanges();
+    const updated: BlockedSlot = {
+      ...mockSlots[0],
+      startTime: '11:00:00',
+      endTime: '13:00:00',
+      reason: 'Updated vacation'
+    };
+    blockedSlotService.updateBlockedSlot.mockReturnValue(of(updated));
+
+    component.editBlockedSlot(mockSlots[0]);
+    component.slotForm.patchValue({
+      startTime: '11:00',
+      endTime: '13:00',
+      reason: 'Updated vacation'
+    });
+    component.saveBlockedSlot();
+
+    expect(blockedSlotService.updateBlockedSlot).toHaveBeenCalledWith(1, {
+      blockDate: '2026-06-20',
+      startTime: '11:00',
+      endTime: '13:00',
+      reason: 'Updated vacation'
+    });
+    expect(component.blockedSlots().find((slot) => slot.id === 1)?.reason).toBe('Updated vacation');
+    expect(component.selectedSlot()).toBeNull();
+    expect(component.successMessage()).toBe('Blocked slot updated.');
   });
 
   it('should delete a blocked slot and remove it from the list', () => {

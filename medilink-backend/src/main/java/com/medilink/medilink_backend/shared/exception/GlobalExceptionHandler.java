@@ -7,6 +7,8 @@ import com.medilink.medilink_backend.appointment.service.DoctorRefNotFoundExcept
 import com.medilink.medilink_backend.appointment.service.InvalidAppointmentStatusException;
 import com.medilink.medilink_backend.appointment.service.PatientNotFoundException;
 import com.medilink.medilink_backend.appointment.service.SlotUnavailableException;
+import com.medilink.medilink_backend.availability.service.AvailabilityNotFoundException;
+import com.medilink.medilink_backend.availability.service.InvalidAvailabilityException;
 import com.medilink.medilink_backend.blockedslot.service.BlockedSlotNotFoundException;
 import com.medilink.medilink_backend.blockedslot.service.InvalidBlockedSlotException;
 import com.medilink.medilink_backend.doctor.service.DoctorNotFoundException;
@@ -139,6 +141,15 @@ public class GlobalExceptionHandler {
 		));
 	}
 
+	@ExceptionHandler(com.medilink.medilink_backend.patient.service.PatientNotFoundException.class)
+	ResponseEntity<ApiResponse<Void>> handleManagedPatientNotFound(
+			com.medilink.medilink_backend.patient.service.PatientNotFoundException exception
+	) {
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure(
+				new ApiError("PATIENT_NOT_FOUND", exception.getMessage(), Map.of())
+		));
+	}
+
 	@ExceptionHandler(SlotUnavailableException.class)
 	ResponseEntity<ApiResponse<Void>> handleSlotUnavailable(SlotUnavailableException exception) {
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.failure(
@@ -157,6 +168,20 @@ public class GlobalExceptionHandler {
 	ResponseEntity<ApiResponse<Void>> handleInvalidBlockedSlot(InvalidBlockedSlotException exception) {
 		return ResponseEntity.badRequest().body(ApiResponse.failure(
 				new ApiError("INVALID_BLOCKED_SLOT", exception.getMessage(), Map.of())
+		));
+	}
+
+	@ExceptionHandler(AvailabilityNotFoundException.class)
+	ResponseEntity<ApiResponse<Void>> handleAvailabilityNotFound(AvailabilityNotFoundException exception) {
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure(
+				new ApiError("AVAILABILITY_NOT_FOUND", exception.getMessage(), Map.of())
+		));
+	}
+
+	@ExceptionHandler(InvalidAvailabilityException.class)
+	ResponseEntity<ApiResponse<Void>> handleInvalidAvailability(InvalidAvailabilityException exception) {
+		return ResponseEntity.badRequest().body(ApiResponse.failure(
+				new ApiError("INVALID_AVAILABILITY", exception.getMessage(), Map.of())
 		));
 	}
 

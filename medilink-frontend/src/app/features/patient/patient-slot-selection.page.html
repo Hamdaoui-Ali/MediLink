@@ -1,55 +1,162 @@
 <section class="slot-page">
-  <h2>Select an Appointment Slot</h2>
-  <p class="subtitle">Doctor ID: {{ doctorId() }}</p>
+  <header class="slot-page__header">
+    <a routerLink="/patient/doctors" class="btn-link slot-page__back">&larr; Back to search</a>
+    <h1 class="slot-page__title">Book an Appointment</h1>
+  </header>
 
-  <div class="date-picker">
-    <label for="slotDate">Choose a date</label>
-    <div class="date-row">
+  <!-- Step indicator -->
+  <nav class="steps" aria-label="Booking progress">
+    <span class="steps__step">
+      <span class="steps__number">1</span>
+      <span class="steps__label">Doctor</span>
+    </span>
+    <span class="steps__connector"></span>
+    <span class="steps__step steps__step--active">
+      <span class="steps__number">2</span>
+      <span class="steps__label">Select Time</span>
+    </span>
+    <span class="steps__connector"></span>
+    <span class="steps__step">
+      <span class="steps__number">3</span>
+      <span class="steps__label">Confirm</span>
+    </span>
+  </nav>
+
+  <!-- Doctor context card -->
+  @if (hasDoctorContext()) {
+    <div class="doctor-context card">
+      <div class="doctor-context__header">
+        <h2 class="doctor-context__name">{{ doctorName() || 'Doctor #' + doctorId() }}</h2>
+        @if (doctorSpecialty()) {
+          <span class="badge badge-info">{{ doctorSpecialty() }}</span>
+        }
+      </div>
+      @if (doctorAddress() || doctorDuration()) {
+        <div class="doctor-context__meta">
+          @if (doctorDuration()) {
+            <span>{{ doctorDuration() }} min consultations</span>
+          }
+          @if (doctorAddress()) {
+            <span>{{ doctorAddress() }}</span>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Date picker -->
+  <div class="date-section">
+    <label for="slotDate" class="date-section__label">Choose a date</label>
+    <p class="date-section__hint">Select a date to see available appointment times.</p>
+    <div class="date-section__row">
       <input
         id="slotDate"
         type="date"
+        class="date-section__input"
         [(ngModel)]="selectedDate"
         [min]="minDate"
         [disabled]="isLoading()"
       />
-      <button class="btn-primary" (click)="loadSlots()" [disabled]="isLoading() || !selectedDate()">
-        @if (isLoading()) { Loading... } @else { Show Slots }
+      <button
+        class="btn btn-primary"
+        (click)="loadSlots()"
+        [disabled]="isLoading() || !selectedDate()"
+      >
+        @if (isLoading()) { Loading... } @else { Show Times }
       </button>
     </div>
   </div>
 
+  <!-- Error state -->
   @if (errorMessage()) {
-    <div class="message message-error">{{ errorMessage() }}</div>
+    <div class="error-state" role="alert">
+      <p>{{ errorMessage() }}</p>
+      <button class="btn btn-secondary" (click)="loadSlots()" [disabled]="isLoading()">
+        Try Again
+      </button>
+    </div>
   }
 
-  @if (slots().length > 0) {
-    <div class="slot-grid">
-      <h3>Available slots for {{ formatDate(selectedDate()) }}</h3>
-      <div class="slots">
-        @for (slot of slots(); track slot.startTime) {
-          <button
-            class="slot-button"
-            [class.slot-selected]="selectedSlot()?.startTime === slot.startTime"
-            (click)="selectSlot(slot)"
-          >
-            {{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}
-          </button>
+  <!-- Loading state -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <p>Finding available appointment times...</p>
+    </div>
+  }
+
+  <!-- Slots grid -->
+  @if (!isLoading() && !errorMessage() && slots().length > 0) {
+    <div class="slot-section">
+      <div class="slot-section__header">
+        <h3>Available times for {{ formatDate(selectedDate()) }}</h3>
+        @if (selectedSlot(); as slot) {
+          <span class="badge badge-info" style="font-size: 0.82rem;">
+            Selected: {{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}
+          </span>
         }
       </div>
 
-      <button
-        class="btn-primary btn-proceed"
-        [disabled]="!selectedSlot()"
-        (click)="proceedToBooking()"
-      >
-        Book Selected Slot
-      </button>
-    </div>
-  } @else if (!isLoading() && selectedDate() && !errorMessage()) {
-    <div class="message message-empty">
-      No available slots for this date. Try another date.
+      <!-- Morning slots -->
+      @if (morningSlots().length > 0) {
+        <div class="slot-group">
+          <h4 class="slot-group__label">Morning</h4>
+          <div class="slots">
+            @for (slot of morningSlots(); track slot.startTime) {
+              <button
+                class="slot-button"
+                [class.slot-button--selected]="selectedSlot()?.startTime === slot.startTime"
+                (click)="selectSlot(slot)"
+              >
+                {{ formatTime(slot.startTime) }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Afternoon slots -->
+      @if (afternoonSlots().length > 0) {
+        <div class="slot-group">
+          <h4 class="slot-group__label">Afternoon</h4>
+          <div class="slots">
+            @for (slot of afternoonSlots(); track slot.startTime) {
+              <button
+                class="slot-button"
+                [class.slot-button--selected]="selectedSlot()?.startTime === slot.startTime"
+                (click)="selectSlot(slot)"
+              >
+                {{ formatTime(slot.startTime) }}
+              </button>
+            }
+          </div>
+        </div>
+      }
     </div>
   }
 
-  <a routerLink="/patient" class="btn-link">Back to Dashboard</a>
+  <!-- Empty state -->
+  @if (!isLoading() && !errorMessage() && hasLoaded() && slots().length === 0) {
+    <div class="empty-state">
+      <p class="empty-state__title">No available slots</p>
+      <p>There are no open appointment times for {{ formatDate(selectedDate()) }}.</p>
+      <p>Try selecting a different date to find an available time.</p>
+    </div>
+  }
+
+  <!-- Continue button -->
+  @if (slots().length > 0) {
+    <div class="slot-page__actions">
+      <button
+        class="btn btn-primary btn-lg btn-block"
+        [disabled]="!selectedSlot()"
+        (click)="proceedToBooking()"
+      >
+        @if (selectedSlot(); as slot) {
+          Continue with {{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}
+        } @else {
+          Select a time to continue
+        }
+      </button>
+    </div>
+  }
 </section>

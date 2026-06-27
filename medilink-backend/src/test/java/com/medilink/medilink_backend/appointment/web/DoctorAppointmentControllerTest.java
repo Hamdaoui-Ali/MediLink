@@ -41,12 +41,7 @@ class DoctorAppointmentControllerTest {
 		when(mockService.resolveDoctor(5L)).thenReturn(doctor);
 		when(doctor.getId()).thenReturn(1L);
 
-		List<AppointmentResponse> appointments = List.of(
-				new AppointmentResponse(10L, 1L, 2L, "Jane Patient",
-						LocalDate.of(2026, 6, 15),
-						LocalTime.of(10, 0), LocalTime.of(10, 30),
-						AppointmentStatus.CONFIRMED, "Checkup", null)
-		);
+		List<AppointmentResponse> appointments = List.of(response(AppointmentStatus.CONFIRMED, null));
 		when(mockService.listFilteredAppointments(1L, null, null, null)).thenReturn(appointments);
 
 		DoctorAppointmentController controller = new DoctorAppointmentController(mockService);
@@ -67,12 +62,7 @@ class DoctorAppointmentControllerTest {
 
 		LocalDate from = LocalDate.of(2026, 6, 1);
 		LocalDate to = LocalDate.of(2026, 6, 30);
-		List<AppointmentResponse> appointments = List.of(
-				new AppointmentResponse(10L, 1L, 2L, "Jane Patient",
-						LocalDate.of(2026, 6, 15),
-						LocalTime.of(10, 0), LocalTime.of(10, 30),
-						AppointmentStatus.CONFIRMED, "Checkup", null)
-		);
+		List<AppointmentResponse> appointments = List.of(response(AppointmentStatus.CONFIRMED, null));
 		when(mockService.listFilteredAppointments(1L, null, from, to)).thenReturn(appointments);
 
 		DoctorAppointmentController controller = new DoctorAppointmentController(mockService);
@@ -110,9 +100,7 @@ class DoctorAppointmentControllerTest {
 		when(mockService.resolveDoctor(5L)).thenReturn(doctor);
 		when(doctor.getId()).thenReturn(1L);
 
-		AppointmentResponse response = new AppointmentResponse(10L, 1L, 2L, "Jane Patient",
-				LocalDate.of(2026, 6, 15), LocalTime.of(10, 0), LocalTime.of(10, 30),
-				AppointmentStatus.CONFIRMED, "Checkup", "Patient doing well");
+		AppointmentResponse response = response(AppointmentStatus.CONFIRMED, "Patient doing well");
 		when(mockService.updateNotes(1L, 10L, "Patient doing well")).thenReturn(response);
 
 		DoctorAppointmentController controller = new DoctorAppointmentController(mockService);
@@ -130,9 +118,7 @@ class DoctorAppointmentControllerTest {
 		when(mockService.resolveDoctor(5L)).thenReturn(doctor);
 		when(doctor.getId()).thenReturn(1L);
 
-		AppointmentResponse response = new AppointmentResponse(10L, 1L, 2L, "Jane Patient",
-				LocalDate.of(2026, 6, 15), LocalTime.of(10, 0), LocalTime.of(10, 30),
-				AppointmentStatus.COMPLETED, "Checkup", null);
+		AppointmentResponse response = response(AppointmentStatus.COMPLETED, null);
 		when(mockService.updateStatus(1L, 10L, AppointmentStatus.COMPLETED)).thenReturn(response);
 
 		DoctorAppointmentController controller = new DoctorAppointmentController(mockService);
@@ -149,5 +135,43 @@ class DoctorAppointmentControllerTest {
 
 		assertNotNull(classAnnotation);
 		assertEquals("hasRole('DOCTOR')", classAnnotation.value());
+	}
+
+	@Test
+	void listPatientHistoryReturnsHistoryForAuthenticatedDoctor() {
+		JwtAuthenticationToken jwt = createJwt(5L);
+		AppointmentService mockService = mock(AppointmentService.class);
+		com.medilink.medilink_backend.appointment.domain.DoctorRef doctor = mock(com.medilink.medilink_backend.appointment.domain.DoctorRef.class);
+		when(mockService.resolveDoctor(5L)).thenReturn(doctor);
+		when(doctor.getId()).thenReturn(1L);
+		when(mockService.listPatientHistoryForDoctor(1L, 2L))
+				.thenReturn(List.of(response(AppointmentStatus.COMPLETED, "Follow-up complete")));
+
+		DoctorAppointmentController controller = new DoctorAppointmentController(mockService);
+		ApiResponse<List<AppointmentResponse>> result = controller.listPatientHistory(jwt, 2L);
+
+		assertTrue(result.success());
+		assertEquals(1, result.data().size());
+		assertEquals("Jane Patient", result.data().getFirst().patientName());
+	}
+
+	private AppointmentResponse response(AppointmentStatus status, String doctorNotes) {
+		return new AppointmentResponse(
+				10L,
+				1L,
+				2L,
+				"Jane Patient",
+				"jane.patient@medilink.local",
+				"+15551234567",
+				LocalDate.of(1990, 1, 15),
+				"FEMALE",
+				"123 Patient St",
+				LocalDate.of(2026, 6, 15),
+				LocalTime.of(10, 0),
+				LocalTime.of(10, 30),
+				status,
+				"Checkup",
+				doctorNotes
+		);
 	}
 }

@@ -100,7 +100,7 @@ export class DoctorProfilePage implements OnInit {
         return 'You do not have permission to access this page.';
       }
       if (error.status === 401) {
-        return 'Your session has expired. Please log in again.';
+        return 'Your session has expired. Please sign in again.';
       }
     }
     return fallback;

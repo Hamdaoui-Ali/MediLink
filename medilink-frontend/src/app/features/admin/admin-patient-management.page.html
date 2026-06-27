@@ -1,0 +1,221 @@
+<section class="patient-admin">
+  <header class="patient-admin__header">
+    <div>
+      <a routerLink="/admin" class="back-link btn-link">Admin Dashboard</a>
+      <h1>Patient Management</h1>
+      <p>Create and manage patient accounts, demographics, and access status.</p>
+    </div>
+    <button type="button" class="btn btn-secondary" (click)="loadPatients()" [disabled]="isLoading()">Refresh</button>
+  </header>
+
+  <div class="patient-admin__grid">
+    <form class="patient-form card" [formGroup]="patientForm" (ngSubmit)="savePatient()" novalidate>
+      <div class="panel-heading">
+        <h2>{{ selectedPatient() ? 'Edit Patient' : 'Create Patient' }}</h2>
+        <p>{{ selectedPatient() ? 'Update account and demographic details.' : 'Create a login account and linked patient record.' }}</p>
+      </div>
+
+      <label>
+        <span>Full Name</span>
+        <input class="form-input" type="text" formControlName="fullName" autocomplete="off" />
+      </label>
+      @if (hasError('fullName')) { <p class="form-error">Full name is required.</p> }
+
+      <label>
+        <span>Email</span>
+        <input class="form-input" type="email" formControlName="email" autocomplete="off" />
+      </label>
+      @if (hasError('email')) { <p class="form-error">Enter a valid email.</p> }
+
+      @if (!selectedPatient()) {
+        <label>
+          <span>Temporary Password</span>
+          <input class="form-input" type="password" formControlName="password" autocomplete="new-password" />
+        </label>
+        @if (hasError('password')) { <p class="form-error">Password must be at least 8 characters.</p> }
+      }
+
+      <label>
+        <span>Phone Number</span>
+        <input class="form-input" type="text" formControlName="phoneNumber" autocomplete="off" />
+      </label>
+
+      <label>
+        <span>Date of Birth</span>
+        <input class="form-input" type="date" formControlName="dateOfBirth" />
+      </label>
+
+      <label>
+        <span>Gender</span>
+        <select class="form-input" formControlName="gender">
+          @for (gender of genders; track gender) {
+            <option [value]="gender">{{ formatGender(gender) }}</option>
+          }
+        </select>
+      </label>
+      @if (hasError('gender')) { <p class="form-error">Gender is required.</p> }
+
+      <label>
+        <span>Address</span>
+        <textarea class="form-input" rows="4" formControlName="address"></textarea>
+      </label>
+
+      @if (errorMessage()) { <p class="message message-error" role="alert">{{ errorMessage() }}</p> }
+      @if (successMessage()) { <p class="message message-success" role="status">{{ successMessage() }}</p> }
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+          {{ isSaving() ? 'Saving...' : selectedPatient() ? 'Save Changes' : 'Create Patient' }}
+        </button>
+        @if (selectedPatient()) {
+          <button type="button" class="btn btn-secondary" (click)="resetForm()" [disabled]="isSaving()">Cancel Edit</button>
+        }
+      </div>
+    </form>
+
+    <section class="patient-list card" aria-labelledby="patient-list-title">
+      <div class="card-header">
+        <h2 id="patient-list-title">Patients</h2>
+        <p>{{ patients().length }} total · {{ activePatientCount() }} active · {{ inactivePatientCount() }} inactive</p>
+      </div>
+
+      <div class="patient-filters">
+        <label>
+          <span>Search</span>
+          <input
+            class="form-input"
+            type="search"
+            placeholder="Name, email, phone, or address"
+            [value]="searchTerm()"
+            (input)="searchTerm.set($any($event.target).value)"
+          />
+        </label>
+        <label>
+          <span>Status</span>
+          <select class="form-input" [value]="statusFilter()" (change)="setStatusFilter($any($event.target).value)">
+            <option value="ALL">All statuses</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+            <option value="DISABLED">Disabled</option>
+          </select>
+        </label>
+        <label>
+          <span>Gender</span>
+          <select class="form-input" [value]="genderFilter()" (change)="setGenderFilter($any($event.target).value)">
+            <option value="ALL">All genders</option>
+            @for (gender of genders; track gender) {
+              <option [value]="gender">{{ formatGender(gender) }}</option>
+            }
+          </select>
+        </label>
+        <button type="button" class="btn btn-secondary" (click)="clearFilters()">Clear</button>
+      </div>
+
+      @if (isLoading()) {
+        <p class="loading-state">Loading patients...</p>
+      } @else if (patients().length === 0) {
+        <p class="empty-state">No patients have been created yet.</p>
+      } @else if (filteredPatients().length === 0) {
+        <p class="empty-state">No patients match the current filters.</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Patient</th>
+                <th>Gender</th>
+                <th>DOB</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (patient of filteredPatients(); track patient.id) {
+                <tr [class.is-selected]="detailPatient()?.id === patient.id">
+                  <td>
+                    <strong>{{ patient.fullName }}</strong>
+                    <span>{{ patient.email }}</span>
+                  </td>
+                  <td>{{ formatGender(patient.gender) }}</td>
+                  <td>{{ formatDate(patient.dateOfBirth) }}</td>
+                  <td>
+                    <span class="badge" [class.badge-success]="patient.accountStatus === 'ACTIVE'" [class.badge-muted]="patient.accountStatus !== 'ACTIVE'">
+                      {{ patient.accountStatus }}
+                    </span>
+                  </td>
+                  <td class="actions">
+                    <button type="button" class="btn btn-secondary" (click)="selectPatient(patient)">View</button>
+                    <button type="button" class="btn btn-secondary" (click)="editPatient(patient)">Edit</button>
+                    @if (patient.accountStatus === 'ACTIVE') {
+                      <button type="button" class="btn btn-danger" (click)="deactivatePatient(patient)">Deactivate</button>
+                    } @else {
+                      <button type="button" class="btn btn-primary" (click)="activatePatient(patient)">Activate</button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <aside class="patient-detail card" aria-labelledby="patient-detail-title">
+      @if (detailPatient(); as patient) {
+        <div class="card-header">
+          <div>
+            <h2 id="patient-detail-title">{{ patient.fullName }}</h2>
+            <p>{{ patient.email }}</p>
+          </div>
+          <span class="badge" [class.badge-success]="patient.accountStatus === 'ACTIVE'" [class.badge-muted]="patient.accountStatus !== 'ACTIVE'">
+            {{ patient.accountStatus }}
+          </span>
+        </div>
+
+        <div class="detail-grid">
+          <div>
+            <span>Phone</span>
+            <strong>{{ patient.phoneNumber || 'Not recorded' }}</strong>
+          </div>
+          <div>
+            <span>Date of Birth</span>
+            <strong>{{ formatDate(patient.dateOfBirth) }}</strong>
+          </div>
+          <div>
+            <span>Gender</span>
+            <strong>{{ formatGender(patient.gender) }}</strong>
+          </div>
+          <div>
+            <span>User ID</span>
+            <strong>{{ patient.userId }}</strong>
+          </div>
+        </div>
+
+        @if (patient.address) {
+          <section class="detail-section">
+            <h3>Address</h3>
+            <p>{{ patient.address }}</p>
+          </section>
+        }
+
+        <form class="password-reset" [formGroup]="passwordForm" (ngSubmit)="resetPassword()" novalidate>
+          <h3>Reset Password</h3>
+          <label>
+            <span>New Temporary Password</span>
+            <input class="form-input" type="password" formControlName="password" autocomplete="new-password" />
+          </label>
+          @if (hasPasswordError()) { <p class="form-error">Password must be at least 8 characters.</p> }
+          <button type="submit" class="btn btn-primary" [disabled]="isResettingPassword()">
+            {{ isResettingPassword() ? 'Resetting...' : 'Reset Password' }}
+          </button>
+          @if (resetPasswordError()) { <p class="message message-error" role="alert">{{ resetPasswordError() }}</p> }
+          @if (resetPasswordMessage()) { <p class="message message-success" role="status">{{ resetPasswordMessage() }}</p> }
+        </form>
+      } @else {
+        <div class="empty-state detail-empty">
+          <p>Select a patient to view account details and reset the temporary password.</p>
+        </div>
+      }
+    </aside>
+  </div>
+</section>

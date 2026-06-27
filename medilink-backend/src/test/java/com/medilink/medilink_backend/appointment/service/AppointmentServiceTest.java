@@ -174,8 +174,8 @@ class AppointmentServiceTest {
 		when(appointment.getStatus()).thenReturn(AppointmentStatus.CONFIRMED);
 		when(appointmentRepository.findByDoctorIdOrderByAppointmentDateDescStartTimeDesc(1L))
 				.thenReturn(List.of(appointment));
-		when(patientRepository.findPatientNamesByIds(List.of(2L)))
-				.thenReturn(List.of(new PatientRef(2L, "Jane Patient")));
+		when(patientRepository.findPatientRefsByIds(List.of(2L)))
+				.thenReturn(List.of(patientRef()));
 
 		List<AppointmentResponse> appointments = service.listAppointments(1L);
 
@@ -193,8 +193,8 @@ class AppointmentServiceTest {
 		LocalDate to = LocalDate.of(2026, 6, 30);
 		when(appointmentRepository.findByDoctorIdAndAppointmentDateBetweenOrderByAppointmentDateDescStartTimeDesc(1L, from, to))
 				.thenReturn(List.of(appointment));
-		when(patientRepository.findPatientNamesByIds(List.of(2L)))
-				.thenReturn(List.of(new PatientRef(2L, "Jane Patient")));
+		when(patientRepository.findPatientRefsByIds(List.of(2L)))
+				.thenReturn(List.of(patientRef()));
 
 		List<AppointmentResponse> appointments = service.listFilteredAppointments(1L, null, from, to);
 
@@ -212,8 +212,8 @@ class AppointmentServiceTest {
 		when(appointmentRepository.findByDoctorIdAndStatusAndAppointmentDateBetweenOrderByAppointmentDateDescStartTimeDesc(
 				1L, AppointmentStatus.COMPLETED, from, to))
 				.thenReturn(List.of(appointment));
-		when(patientRepository.findPatientNamesByIds(List.of(2L)))
-				.thenReturn(List.of(new PatientRef(2L, "Jane Patient")));
+		when(patientRepository.findPatientRefsByIds(List.of(2L)))
+				.thenReturn(List.of(patientRef()));
 
 		List<AppointmentResponse> appointments = service.listFilteredAppointments(
 				1L, AppointmentStatus.COMPLETED, from, to);
@@ -242,8 +242,8 @@ class AppointmentServiceTest {
 		when(appointment.getPatientId()).thenReturn(2L);
 		when(appointmentRepository.findByDoctorIdOrderByAppointmentDateDescStartTimeDesc(1L))
 				.thenReturn(List.of(appointment));
-		when(patientRepository.findPatientNamesByIds(List.of(2L)))
-				.thenReturn(List.of(new PatientRef(2L, "Jane Patient")));
+		when(patientRepository.findPatientRefsByIds(List.of(2L)))
+				.thenReturn(List.of(patientRef()));
 
 		service.listFilteredAppointments(1L, null, null, null);
 
@@ -362,5 +362,34 @@ class AppointmentServiceTest {
 
 		assertThrows(InvalidAppointmentStatusException.class,
 				() -> service.updateStatus(1L, 10L, AppointmentStatus.RESCHEDULED));
+	}
+
+	@Test
+	void listPatientHistoryForDoctorReturnsOnlyDoctorPatientAppointments() {
+		Appointment appointment = mock(Appointment.class);
+		when(appointment.getPatientId()).thenReturn(2L);
+		when(appointment.getStatus()).thenReturn(AppointmentStatus.COMPLETED);
+		when(appointmentRepository.findByDoctorIdAndPatientIdOrderByAppointmentDateDescStartTimeDesc(1L, 2L))
+				.thenReturn(List.of(appointment));
+		when(patientRepository.findPatientRefsByIds(List.of(2L)))
+				.thenReturn(List.of(patientRef()));
+
+		List<AppointmentResponse> history = service.listPatientHistoryForDoctor(1L, 2L);
+
+		assertEquals(1, history.size());
+		assertEquals("Jane Patient", history.getFirst().patientName());
+		assertEquals("jane.patient@medilink.local", history.getFirst().patientEmail());
+	}
+
+	private PatientRef patientRef() {
+		return new PatientRef(
+				2L,
+				"Jane Patient",
+				"jane.patient@medilink.local",
+				"+15551234567",
+				LocalDate.of(1990, 1, 15),
+				null,
+				"123 Patient St"
+		);
 	}
 }

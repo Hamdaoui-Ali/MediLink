@@ -42,6 +42,16 @@ public class Doctor {
 
 	protected Doctor() {}
 
+	public Doctor(User user, Specialty specialty, String biography, int consultationDurationMinutes,
+			String clinicAddress) {
+		this.user = user;
+		this.specialty = specialty;
+		this.biography = biography;
+		this.consultationDurationMinutes = consultationDurationMinutes;
+		this.clinicAddress = clinicAddress;
+		this.status = "ACTIVE";
+	}
+
 	public Long getId() {
 		return id;
 	}
@@ -82,5 +92,21 @@ public class Doctor {
 		this.biography = biography;
 		this.clinicAddress = clinicAddress;
 		this.consultationDurationMinutes = consultationDurationMinutes;
+	}
+
+	public void updateAdminFields(Specialty specialty, String biography, int consultationDurationMinutes,
+			String clinicAddress) {
+		this.specialty = specialty;
+		updateProfile(biography, clinicAddress, consultationDurationMinutes);
+	}
+
+	public void activate() {
+		this.status = "ACTIVE";
+		this.user.activate();
+	}
+
+	public void deactivate() {
+		this.status = "INACTIVE";
+		this.user.deactivate();
 	}
 }

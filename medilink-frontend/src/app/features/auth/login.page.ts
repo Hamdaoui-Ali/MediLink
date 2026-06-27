@@ -61,13 +61,13 @@ export class LoginPage {
 
   getErrorMessage(error: unknown): string {
     if (error instanceof HttpErrorResponse && error.status === 0) {
-      return 'Cannot reach the backend. Make sure the API is running at http://localhost:1234/api.';
+      return 'Unable to connect to the server. Please check your connection and try again.';
     }
 
     if (error instanceof HttpErrorResponse && error.status >= 500) {
-      return 'Login service failed. Restart the backend and make sure database migrations ran.';
+      return 'The service is temporarily unavailable. Please try again in a moment.';
     }
 
-    return 'The email or password is incorrect.';
+    return 'The email or password is incorrect. Please check your credentials and try again.';
   }
 }

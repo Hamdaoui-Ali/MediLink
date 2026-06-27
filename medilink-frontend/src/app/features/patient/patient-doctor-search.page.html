@@ -1,47 +1,120 @@
 <section class="search-page">
-  <h2>Find a Doctor</h2>
+  <header class="search-page__header">
+    <h1 class="search-page__title">Find Your Doctor</h1>
+    <p class="search-page__subtitle">Search for healthcare professionals and book your next appointment.</p>
+  </header>
 
   <div class="search-bar">
     <input
       type="text"
+      class="search-bar__input"
       [(ngModel)]="searchName"
-      placeholder="Search by doctor name..."
-      (keyup.enter)="loadDoctors()"
+      placeholder="Search by doctor name, specialty, or clinic"
+      (keyup.enter)="search()"
       [disabled]="isLoading()"
+      aria-label="Search for a doctor"
     />
-    <button class="btn-primary" (click)="loadDoctors()" [disabled]="isLoading()">
-      @if (isLoading()) { Searching... } @else { Search }
+    <button
+      class="btn btn-primary search-bar__btn"
+      (click)="search()"
+      [disabled]="isLoading() || !searchName().trim()"
+    >
+      @if (isLoading()) {
+        Searching...
+      } @else {
+        Search
+      }
     </button>
   </div>
 
+  <!-- Error state -->
   @if (errorMessage()) {
-    <div class="message message-error">{{ errorMessage() }}</div>
+    <div class="error-state" role="alert">
+      <p>{{ errorMessage() }}</p>
+      <button class="btn btn-secondary" (click)="search()" [disabled]="isLoading()">
+        Try Again
+      </button>
+    </div>
   }
 
-  @if (doctors().length > 0) {
+  <!-- Loading state -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <p>Finding doctors matching your search...</p>
+    </div>
+  }
+
+  <!-- Results -->
+  @if (!isLoading() && doctors().length > 0) {
+    <div class="results-summary">
+      <p>{{ doctors().length }} doctor{{ doctors().length === 1 ? '' : 's' }} found</p>
+      <button class="btn btn-ghost btn-sm" (click)="resetSearch()">Clear search</button>
+    </div>
+
     <div class="doctor-list">
       @for (doctor of doctors(); track doctor.id) {
-        <div class="doctor-card">
-          <h3>{{ doctor.fullName }}</h3>
-          <span class="specialty-badge">{{ doctor.specialtyName }}</span>
-          @if (doctor.biography) {
-            <p class="bio">{{ doctor.biography }}</p>
-          }
-          <div class="meta">
-            <span>{{ doctor.consultationDurationMinutes }} min consultations</span>
-            @if (doctor.clinicAddress) {
-              <span>{{ doctor.clinicAddress }}</span>
-            }
+        <article class="doctor-card card">
+          <div class="doctor-card__header">
+            <div>
+              <h3 class="doctor-card__name">{{ doctor.fullName }}</h3>
+              @if (doctor.specialtyName) {
+                <span class="badge badge-info">{{ doctor.specialtyName }}</span>
+              }
+            </div>
           </div>
-          <a [routerLink]="['/patient/slots', doctor.id]" class="btn-primary btn-select">
-            View Available Slots
-          </a>
-        </div>
+
+          <div class="doctor-card__body">
+            @if (doctor.biography) {
+              <p class="doctor-card__bio">{{ doctor.biography }}</p>
+            }
+            <div class="doctor-card__details">
+              <div class="doctor-card__detail">
+                <span class="doctor-card__detail-icon">&#9200;</span>
+                <span>{{ doctor.consultationDurationMinutes }} min consultations</span>
+              </div>
+              @if (doctor.clinicAddress) {
+                <div class="doctor-card__detail">
+                  <span class="doctor-card__detail-icon">&#128205;</span>
+                  <span>{{ doctor.clinicAddress }}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="doctor-card__footer">
+            <a
+              [routerLink]="['/patient/slots', doctor.id]"
+              [queryParams]="{ name: doctor.fullName, specialty: doctor.specialtyName, address: doctor.clinicAddress, duration: doctor.consultationDurationMinutes }"
+              class="btn btn-primary btn-block"
+            >
+              View Available Slots
+            </a>
+          </div>
+        </article>
       }
     </div>
-  } @else if (!isLoading() && !errorMessage()) {
-    <div class="message message-empty">No doctors found. Try a different search.</div>
   }
 
-  <a routerLink="/patient" class="btn-link">Back to Dashboard</a>
+  <!-- Empty state (searched, no results) -->
+  @if (!isLoading() && !errorMessage() && hasSearched() && doctors().length === 0) {
+    <div class="empty-state">
+      <p class="empty-state__title">No doctors found</p>
+      <p>We couldn't find any doctors matching "<strong>{{ searchName() }}</strong>".</p>
+      <p>Try searching with a different name or browse all available specialists.</p>
+      <button class="btn btn-secondary" (click)="resetSearch()">Start a New Search</button>
+    </div>
+  }
+
+  <!-- Initial state (haven't searched yet) -->
+  @if (!isLoading() && !errorMessage() && !hasSearched()) {
+    <div class="empty-state">
+      <p class="empty-state__title">Ready to find care</p>
+      <p>Enter a doctor's name above to discover available healthcare professionals who match your needs.</p>
+      <p class="empty-state__hint">You can search by full or partial name. Results include their specialty, biography, and available appointment slots.</p>
+    </div>
+  }
+
+  <a routerLink="/patient" class="btn-link" style="display: block; margin-top: 2rem; text-align: center;">
+    &larr; Back to Dashboard
+  </a>
 </section>

@@ -10,6 +10,11 @@ export interface Appointment {
   doctorId: number;
   patientId: number;
   patientName: string;
+  patientEmail: string | null;
+  patientPhoneNumber: string | null;
+  patientDateOfBirth: string | null;
+  patientGender: string | null;
+  patientAddress: string | null;
   appointmentDate: string;
   startTime: string;
   endTime: string;

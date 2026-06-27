@@ -106,7 +106,7 @@ describe('DoctorProfilePage', () => {
 
     component.saveProfile();
 
-    expect(component.errorMessage()).toBe('Your session has expired. Please log in again.');
+    expect(component.errorMessage()).toBe('Your session has expired. Please sign in again.');
     expect(component.isSaving()).toBeFalsy();
   });
 

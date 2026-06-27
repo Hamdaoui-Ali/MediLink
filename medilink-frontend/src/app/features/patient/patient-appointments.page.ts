@@ -109,11 +109,11 @@ export class PatientAppointmentsPage implements OnInit {
 
   statusClass(status: AppointmentStatus): string {
     const classes: Record<AppointmentStatus, string> = {
-      CONFIRMED: 'status-confirmed', CANCELLED: 'status-cancelled',
-      COMPLETED: 'status-completed', MISSED: 'status-missed',
-      RESCHEDULED: 'status-rescheduled'
+      CONFIRMED: 'badge-info', CANCELLED: 'badge-danger',
+      COMPLETED: 'badge-success', MISSED: 'badge-warning',
+      RESCHEDULED: 'badge-purple'
     };
-    return classes[status] ?? '';
+    return classes[status] ?? 'badge-muted';
   }
 
   private updateAppointmentInList(updated: Appointment): void {
@@ -124,7 +124,7 @@ export class PatientAppointmentsPage implements OnInit {
     if (typeof error === 'object' && error !== null) {
       const err = error as Record<string, unknown>;
       if (err['status'] === 403) return 'You do not have permission.';
-      if (err['status'] === 401) return 'Session expired. Please log in again.';
+      if (err['status'] === 401) return 'Your session has expired. Please sign in again.';
     }
     return fallback;
   }

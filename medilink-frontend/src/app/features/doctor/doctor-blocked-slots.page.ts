@@ -20,6 +20,7 @@ export class DoctorBlockedSlotsPage implements OnInit {
   readonly isSaving = signal(false);
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
+  readonly selectedSlot = signal<BlockedSlot | null>(null);
 
   readonly slotForm = this.formBuilder.nonNullable.group({
     blockDate: ['', Validators.required],
@@ -48,7 +49,7 @@ export class DoctorBlockedSlotsPage implements OnInit {
     });
   }
 
-  createBlockedSlot(): void {
+  saveBlockedSlot(): void {
     this.errorMessage.set('');
     this.successMessage.set('');
     this.slotForm.markAllAsTouched();
@@ -58,27 +59,48 @@ export class DoctorBlockedSlotsPage implements OnInit {
     }
 
     const request = this.toRequest();
+    const selected = this.selectedSlot();
+    const save$ = selected
+      ? this.blockedSlotService.updateBlockedSlot(selected.id, request)
+      : this.blockedSlotService.createBlockedSlot(request);
 
     this.isSaving.set(true);
 
-    this.blockedSlotService.createBlockedSlot(request).subscribe({
+    save$.subscribe({
       next: (slot) => {
-        this.blockedSlots.set([slot, ...this.blockedSlots()]);
-        this.slotForm.reset({
-          blockDate: '',
-          startTime: '',
-          endTime: '',
-          reason: ''
-        });
-        this.slotForm.markAsUntouched();
-        this.successMessage.set('Blocked slot created.');
+        this.blockedSlots.set(this.upsertSlot(slot));
+        this.resetForm();
+        this.successMessage.set(selected ? 'Blocked slot updated.' : 'Blocked slot created.');
         this.isSaving.set(false);
       },
       error: (error) => {
-        this.errorMessage.set(this.getErrorMessage(error, 'Unable to create blocked slot.'));
+        this.errorMessage.set(this.getErrorMessage(error, 'Unable to save blocked slot.'));
         this.isSaving.set(false);
       }
     });
+  }
+
+  editBlockedSlot(slot: BlockedSlot): void {
+    this.selectedSlot.set(slot);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+    this.slotForm.setValue({
+      blockDate: slot.blockDate,
+      startTime: this.trimSeconds(slot.startTime),
+      endTime: this.trimSeconds(slot.endTime),
+      reason: slot.reason ?? ''
+    });
+  }
+
+  resetForm(): void {
+    this.selectedSlot.set(null);
+    this.slotForm.reset({
+      blockDate: '',
+      startTime: '',
+      endTime: '',
+      reason: ''
+    });
+    this.slotForm.markAsUntouched();
   }
 
   deleteBlockedSlot(slot: BlockedSlot): void {
@@ -90,6 +112,9 @@ export class DoctorBlockedSlotsPage implements OnInit {
         this.blockedSlots.set(
           this.blockedSlots().filter((item) => item.id !== slot.id)
         );
+        if (this.selectedSlot()?.id === slot.id) {
+          this.resetForm();
+        }
         this.successMessage.set('Blocked slot removed.');
       },
       error: (error) => {
@@ -145,13 +170,25 @@ export class DoctorBlockedSlotsPage implements OnInit {
     };
   }
 
+  private trimSeconds(time: string): string {
+    return time ? time.slice(0, 5) : '';
+  }
+
+  private upsertSlot(slot: BlockedSlot): BlockedSlot[] {
+    const withoutSaved = this.blockedSlots().filter((item) => item.id !== slot.id);
+    return [slot, ...withoutSaved].sort((a, b) => {
+      const dateSort = b.blockDate.localeCompare(a.blockDate);
+      return dateSort !== 0 ? dateSort : b.startTime.localeCompare(a.startTime);
+    });
+  }
+
   private getErrorMessage(error: unknown, fallback: string): string {
     if (typeof error === 'object' && error !== null && 'status' in error) {
       if (error.status === 403) {
         return 'You do not have permission to manage blocked slots.';
       }
       if (error.status === 401) {
-        return 'Your session has expired. Please log in again.';
+        return 'Your session has expired. Please sign in again.';
       }
       if (error.status === 400) {
         return 'Please check your input — times must be valid and the date cannot be in the past.';

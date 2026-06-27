@@ -1,28 +1,72 @@
 <section class="specialty-shell">
   <header class="specialty-header">
     <div>
-      <a routerLink="/admin" class="back-link">Admin</a>
+      <a routerLink="/admin" class="back-link btn-link">Admin Dashboard</a>
       <h1>Specialty Management</h1>
+      <p class="specialty-subtitle">Define and manage medical specialties used across the platform for doctor profiles and patient search.</p>
     </div>
-    <button type="button" class="secondary-action" (click)="loadSpecialties()" [disabled]="isLoading()">
+    <button type="button" class="btn btn-secondary" (click)="loadSpecialties()" [disabled]="isLoading()">
       Refresh
     </button>
   </header>
 
+  <!-- Search and filter bar -->
+  <div class="search-filter-bar">
+    <input
+      type="text"
+      class="search-input"
+      [(ngModel)]="searchQuery"
+      placeholder="Search specialties by name or description..."
+      aria-label="Search specialties"
+    />
+
+    <nav class="status-tabs">
+      <button
+        class="status-tab"
+        [class.is-active]="statusFilter() === 'ALL'"
+        (click)="setStatusFilter('ALL')"
+      >All</button>
+      <button
+        class="status-tab"
+        [class.is-active]="statusFilter() === 'ACTIVE'"
+        (click)="setStatusFilter('ACTIVE')"
+      >Active</button>
+      <button
+        class="status-tab"
+        [class.is-active]="statusFilter() === 'INACTIVE'"
+        (click)="setStatusFilter('INACTIVE')"
+      >Inactive</button>
+    </nav>
+  </div>
+
+  <!-- Error state -->
+  @if (errorMessage() && specialties().length === 0) {
+    <div class="error-state" role="alert">
+      <p>{{ errorMessage() }}</p>
+      <button class="btn btn-secondary btn-sm" (click)="loadSpecialties()">Retry</button>
+    </div>
+  }
+
   <div class="specialty-grid">
-    <section class="specialty-list" aria-labelledby="specialty-list-title">
-      <div class="panel-heading">
+    <section class="specialty-list card" aria-labelledby="specialty-list-title">
+      <div class="card-header">
         <div>
           <h2 id="specialty-list-title">Specialties</h2>
-          <p>{{ specialties().length }} total</p>
+          <p>{{ filteredSpecialties().length }} of {{ specialties().length }} total</p>
         </div>
-        <button type="button" (click)="startCreate()">New</button>
+        <button type="button" class="btn btn-primary" (click)="startCreate()">New</button>
       </div>
 
-      @if (isLoading()) {
-        <p class="state-text">Loading specialties...</p>
-      } @else if (specialties().length === 0) {
-        <p class="state-text">No specialties yet.</p>
+      @if (isLoading() && specialties().length === 0) {
+        <p class="loading-state">Loading specialties...</p>
+      } @else if (filteredSpecialties().length === 0) {
+        <p class="empty-state">
+          @if (searchQuery() || statusFilter() !== 'ALL') {
+            No specialties match your filters. Try a different search.
+          } @else {
+            No specialties yet. Create your first specialty to get started.
+          }
+        </p>
       } @else {
         <div class="table-wrap">
           <table>
@@ -35,21 +79,32 @@
               </tr>
             </thead>
             <tbody>
-              @for (specialty of specialties(); track specialty.id) {
+              @for (specialty of filteredSpecialties(); track specialty.id) {
                 <tr [class.is-selected]="selectedSpecialty()?.id === specialty.id">
-                  <td>{{ specialty.name }}</td>
+                  <td class="name-cell">{{ specialty.name }}</td>
                   <td>
-                    <span class="status-pill" [class.is-inactive]="specialty.status === 'INACTIVE'">
-                      {{ specialty.status }}
+                    <span class="badge" [class]="statusClass(specialty.status)">
+                      {{ statusLabel(specialty.status) }}
                     </span>
                   </td>
-                  <td>{{ specialty.description || 'No description' }}</td>
+                  <td>{{ specialty.description || '-' }}</td>
                   <td class="actions">
-                    <button type="button" class="secondary-action" (click)="startEdit(specialty)">Edit</button>
+                    <button type="button" class="btn btn-secondary btn-sm" (click)="startEdit(specialty)">Edit</button>
                     @if (specialty.status === 'ACTIVE') {
-                      <button type="button" class="danger-action" (click)="deactivate(specialty)">Deactivate</button>
+                      @if (confirmDeactivateId() === specialty.id) {
+                        <button type="button" class="btn btn-danger btn-sm" (click)="deactivate(specialty)">
+                          Confirm Deactivate
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" (click)="cancelDeactivate()">
+                          Cancel
+                        </button>
+                      } @else {
+                        <button type="button" class="btn btn-danger btn-sm" (click)="confirmDeactivate(specialty)">
+                          Deactivate
+                        </button>
+                      }
                     } @else {
-                      <button type="button" class="secondary-action" (click)="activate(specialty)">Activate</button>
+                      <button type="button" class="btn btn-secondary btn-sm" (click)="activate(specialty)">Activate</button>
                     }
                   </td>
                 </tr>
@@ -60,43 +115,51 @@
       }
     </section>
 
-    <form class="specialty-form" [formGroup]="specialtyForm" (ngSubmit)="submit()" novalidate>
-      <div class="panel-heading">
+    <form class="specialty-form card" [formGroup]="specialtyForm" (ngSubmit)="submit()" novalidate>
+      <div class="card-header">
         <div>
           <h2>{{ isEditing() ? 'Edit Specialty' : 'Create Specialty' }}</h2>
-          <p>{{ isEditing() ? selectedSpecialty()?.status : 'ACTIVE' }}</p>
+          @if (isEditing()) {
+            <p>
+              <span class="badge" [class]="statusClass(selectedSpecialty()!.status)">
+                {{ statusLabel(selectedSpecialty()!.status) }}
+              </span>
+            </p>
+          }
         </div>
       </div>
 
-      <label>
-        <span>Name</span>
-        <input type="text" formControlName="name" autocomplete="off" />
-      </label>
-      @if (hasError('name')) {
-        <p class="field-error">Name is required and must be 120 characters or fewer.</p>
-      }
-
-      <label>
-        <span>Description</span>
-        <textarea formControlName="description" rows="5"></textarea>
-      </label>
-      @if (hasError('description')) {
-        <p class="field-error">Description must be 500 characters or fewer.</p>
-      }
-
-      @if (errorMessage()) {
-        <p class="form-error" role="alert">{{ errorMessage() }}</p>
-      }
-
-      @if (successMessage()) {
-        <p class="form-success" role="status">{{ successMessage() }}</p>
-      }
-
-      <div class="form-actions">
-        <button type="submit" [disabled]="specialtyForm.invalid || isSaving()">{{ submitLabel() }}</button>
-        @if (isEditing()) {
-          <button type="button" class="secondary-action" (click)="startCreate()">Cancel</button>
+      <div class="card-body" style="display: flex; flex-direction: column; gap: var(--space-md);">
+        <label class="form-label">
+          <span>Name</span>
+          <input type="text" formControlName="name" class="form-input" autocomplete="off" placeholder="e.g. Cardiology, Pediatrics" />
+        </label>
+        @if (hasError('name')) {
+          <p class="form-error">Name is required and must be 120 characters or fewer.</p>
         }
+
+        <label class="form-label">
+          <span>Description</span>
+          <textarea formControlName="description" class="form-input" rows="4" placeholder="Brief description of this specialty for patient search results"></textarea>
+        </label>
+        @if (hasError('description')) {
+          <p class="form-error">Description must be 500 characters or fewer.</p>
+        }
+
+        @if (errorMessage()) {
+          <p class="message message-error" role="alert">{{ errorMessage() }}</p>
+        }
+
+        @if (successMessage()) {
+          <p class="message message-success" role="status">{{ successMessage() }}</p>
+        }
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="specialtyForm.invalid || isSaving()">{{ submitLabel() }}</button>
+          @if (isEditing()) {
+            <button type="button" class="btn btn-secondary" (click)="startCreate()">Cancel</button>
+          }
+        </div>
       </div>
     </form>
   </div>

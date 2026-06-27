@@ -74,4 +74,22 @@ describe('BlockedSlotService', () => {
     expect(req.request.method).toBe('DELETE');
     req.flush({ success: true, data: null });
   });
+
+  it('should update a blocked slot', () => {
+    const request = {
+      blockDate: '2026-06-21',
+      startTime: '13:00:00',
+      endTime: '15:00:00',
+      reason: 'Updated'
+    };
+
+    service.updateBlockedSlot(1, request).subscribe((slot) => {
+      expect(slot.reason).toBe('Updated');
+    });
+
+    const req = httpTesting.expectOne('/v1/doctor/blocked-slots/1');
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual(request);
+    req.flush({ success: true, data: { ...mockSlots[0], ...request } });
+  });
 });

@@ -95,4 +95,14 @@ public class User {
 	public void updatePhoneNumber(String phoneNumber) {
 		this.phoneNumber = phoneNumber;
 	}
+
+	public void updateIdentity(String fullName, String email, String phoneNumber) {
+		this.fullName = fullName;
+		this.email = email;
+		this.phoneNumber = phoneNumber;
+	}
+
+	public void updatePasswordHash(String passwordHash) {
+		this.passwordHash = passwordHash;
+	}
 }

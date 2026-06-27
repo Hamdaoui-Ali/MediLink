@@ -76,6 +76,13 @@ export const routes: Routes = [
       import('./features/doctor/doctor-blocked-slots.page').then((module) => module.DoctorBlockedSlotsPage)
   },
   {
+    path: 'doctor/availability',
+    canActivate: [authGuard],
+    data: { roles: ['DOCTOR'] },
+    loadComponent: () =>
+      import('./features/doctor/doctor-availability.page').then((module) => module.DoctorAvailabilityPage)
+  },
+  {
     path: 'doctor/profile',
     canActivate: [authGuard],
     data: { roles: ['DOCTOR'] },
@@ -95,6 +102,20 @@ export const routes: Routes = [
     data: { roles: ['ADMIN'] },
     loadComponent: () =>
       import('./features/admin/admin-specialty-management.page').then((module) => module.AdminSpecialtyManagementPage)
+  },
+  {
+    path: 'admin/doctors',
+    canActivate: [authGuard],
+    data: { roles: ['ADMIN'] },
+    loadComponent: () =>
+      import('./features/admin/admin-doctor-management.page').then((module) => module.AdminDoctorManagementPage)
+  },
+  {
+    path: 'admin/patients',
+    canActivate: [authGuard],
+    data: { roles: ['ADMIN'] },
+    loadComponent: () =>
+      import('./features/admin/admin-patient-management.page').then((module) => module.AdminPatientManagementPage)
   },
   {
     path: '**',

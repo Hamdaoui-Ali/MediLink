@@ -52,6 +52,15 @@ public class DoctorAppointmentController {
 		return ApiResponse.success(appointmentService.getAppointment(doctorId, id));
 	}
 
+	@GetMapping("/patients/{patientId}/appointments")
+	public ApiResponse<List<AppointmentResponse>> listPatientHistory(
+			JwtAuthenticationToken jwt,
+			@PathVariable Long patientId
+	) {
+		Long doctorId = resolveDoctorId(jwt);
+		return ApiResponse.success(appointmentService.listPatientHistoryForDoctor(doctorId, patientId));
+	}
+
 	@PatchMapping("/{id}/notes")
 	public ApiResponse<AppointmentResponse> updateNotes(
 			JwtAuthenticationToken jwt,

@@ -16,6 +16,9 @@ export class PatientBookAppointmentPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
 
   readonly doctorId = signal<number | null>(null);
+  readonly doctorName = signal('');
+  readonly doctorSpecialty = signal('');
+  readonly doctorDuration = signal<number | null>(null);
   readonly appointmentDate = signal('');
   readonly startTime = signal('');
   readonly endTime = signal('');
@@ -24,7 +27,8 @@ export class PatientBookAppointmentPage implements OnInit {
 
   readonly isSubmitting = signal(false);
   readonly errorMessage = signal('');
-  readonly successMessage = signal('');
+  readonly showManualForm = signal(false);
+
   readonly bookedAppointment = signal<Appointment | null>(null);
 
   ngOnInit(): void {
@@ -41,6 +45,10 @@ export class PatientBookAppointmentPage implements OnInit {
         this.endTime.set(endTime ?? '');
         this.preFilled.set(true);
       }
+
+      if (params['name']) this.doctorName.set(params['name']);
+      if (params['specialty']) this.doctorSpecialty.set(params['specialty']);
+      if (params['duration']) this.doctorDuration.set(Number(params['duration']));
     });
   }
 
@@ -48,16 +56,15 @@ export class PatientBookAppointmentPage implements OnInit {
     const doctorId = this.doctorId();
     const date = this.appointmentDate();
     const time = this.startTime();
-    const reason = this.reason();
+    const reasonText = this.reason();
 
-    if (!doctorId || !date || !time || !reason.trim()) {
-      this.errorMessage.set('Please fill in all fields.');
+    if (!doctorId || !date || !time || !reasonText.trim()) {
+      this.errorMessage.set('Please fill in all required fields before booking.');
       return;
     }
 
     this.isSubmitting.set(true);
     this.errorMessage.set('');
-    this.successMessage.set('');
 
     const fullTime = time.includes(':') && time.split(':').length === 3 ? time : time + ':00';
 
@@ -65,11 +72,10 @@ export class PatientBookAppointmentPage implements OnInit {
       doctorId,
       appointmentDate: date,
       startTime: fullTime,
-      reason: reason.trim()
+      reason: reasonText.trim()
     }).subscribe({
       next: (appointment) => {
         this.bookedAppointment.set(appointment);
-        this.successMessage.set('Your appointment has been booked successfully!');
         this.isSubmitting.set(false);
       },
       error: (error) => {
@@ -81,12 +87,17 @@ export class PatientBookAppointmentPage implements OnInit {
 
   reset(): void {
     this.doctorId.set(null);
+    this.doctorName.set('');
+    this.doctorSpecialty.set('');
+    this.doctorDuration.set(null);
     this.appointmentDate.set('');
     this.startTime.set('');
+    this.endTime.set('');
     this.reason.set('');
     this.errorMessage.set('');
-    this.successMessage.set('');
     this.bookedAppointment.set(null);
+    this.preFilled.set(false);
+    this.showManualForm.set(false);
   }
 
   formatDate(date: string): string {
@@ -113,22 +124,20 @@ export class PatientBookAppointmentPage implements OnInit {
     if (typeof error === 'object' && error !== null) {
       const err = error as Record<string, unknown>;
       if (err['status'] === 409) {
-        const body = err['error'] as Record<string, unknown> | undefined;
-        return (body?.['error'] as Record<string, string>)?.['message']
-          ?? 'This time slot is no longer available. Please choose another slot.';
+        return 'This time slot is no longer available. Please return and choose another time.';
       }
       if (err['status'] === 403) {
-        return 'You do not have permission to perform this action.';
+        return 'You are not authorized to book this appointment.';
       }
       if (err['status'] === 401) {
-        return 'Your session has expired. Please log in again.';
+        return 'Your session has expired. Please sign in again.';
       }
       if (err['status'] === 400) {
         const body = err['error'] as Record<string, unknown> | undefined;
-        return (body?.['error'] as Record<string, string>)?.['message']
-          ?? 'Invalid booking request. Please check your inputs.';
+        const message = (body?.['error'] as Record<string, string>)?.['message'];
+        return message ?? 'There was a problem with your booking request. Please check your information.';
       }
     }
-    return 'Unable to book appointment. Please try again later.';
+    return 'Unable to complete your booking. Please try again later.';
   }
 }

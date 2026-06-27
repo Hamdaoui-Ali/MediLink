@@ -12,9 +12,9 @@ describe('PatientSlotSelectionPage', () => {
   let httpMock: HttpTestingController;
 
   const mockSlots: Slot[] = [
-    { startTime: '09:00:00', endTime: '09:30:00' },
-    { startTime: '09:30:00', endTime: '10:00:00' },
-    { startTime: '10:00:00', endTime: '10:30:00' }
+    { startTime: '09:00', endTime: '09:30' },
+    { startTime: '09:30', endTime: '10:00' },
+    { startTime: '10:00', endTime: '10:30' }
   ];
 
   beforeEach(async () => {
@@ -24,7 +24,13 @@ describe('PatientSlotSelectionPage', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
-        { provide: ActivatedRoute, useValue: { params: of({ doctorId: '5' }) } }
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            params: of({ doctorId: '5' }),
+            queryParams: of({})
+          }
+        }
       ]
     }).compileComponents();
 
@@ -46,9 +52,10 @@ describe('PatientSlotSelectionPage', () => {
     expect(component.doctorId()).toBe(5);
   });
 
-  it('should have show slots button disabled when no date selected', () => {
-    const button = fixture.nativeElement.querySelector('.date-row button');
-    expect(button.disabled).toBeTrue();
+  it('should have show times button disabled when no date selected', () => {
+    const button = fixture.nativeElement.querySelector('.date-section__row .btn');
+    expect(button).toBeTruthy();
+    expect(button.disabled).toBe(true);
   });
 
   it('should load available slots for selected date', () => {
@@ -75,7 +82,7 @@ describe('PatientSlotSelectionPage', () => {
     req.flush({ success: true, data: [] });
     fixture.detectChanges();
 
-    const emptyMsg = fixture.nativeElement.querySelector('.message-empty');
+    const emptyMsg = fixture.nativeElement.querySelector('.empty-state');
     expect(emptyMsg).toBeTruthy();
   });
 
@@ -83,19 +90,20 @@ describe('PatientSlotSelectionPage', () => {
     component.slots.set(mockSlots);
     fixture.detectChanges();
 
-    const button = fixture.nativeElement.querySelectorAll('.slot-button')[1];
-    button.click();
+    const buttons = fixture.nativeElement.querySelectorAll('.slot-button');
+    buttons[1].click();
     fixture.detectChanges();
 
-    expect(component.selectedSlot()?.startTime).toBe('09:30:00');
-    expect(button.classList.contains('slot-selected')).toBeTrue();
+    expect(component.selectedSlot()?.startTime).toBe('09:30');
+    expect(buttons[1].classList.contains('slot-button--selected')).toBe(true);
   });
 
-  it('should disable proceed button when no slot selected', () => {
+  it('should disable continue button when no slot selected', () => {
     component.slots.set(mockSlots);
     fixture.detectChanges();
 
-    const proceedBtn = fixture.nativeElement.querySelector('.btn-proceed');
-    expect(proceedBtn.disabled).toBeTrue();
+    const proceedBtn = fixture.nativeElement.querySelector('.slot-page__actions .btn');
+    expect(proceedBtn).toBeTruthy();
+    expect(proceedBtn.disabled).toBe(true);
   });
 });

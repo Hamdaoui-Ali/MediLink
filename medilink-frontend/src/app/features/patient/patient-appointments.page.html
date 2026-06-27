@@ -1,63 +1,89 @@
 <section class="appointments-page">
-  <h2>My Appointments</h2>
+  <div class="appointments-page__header">
+    <h1>My Appointments</h1>
+    <a routerLink="/patient/doctors" class="btn btn-primary btn-sm">Book New Appointment</a>
+  </div>
 
+  <!-- Tabs -->
   <nav class="tabs">
     <button [class.tab-active]="activeTab() === 'all'" (click)="setTab('all')">All</button>
     <button [class.tab-active]="activeTab() === 'upcoming'" (click)="setTab('upcoming')">Upcoming</button>
     <button [class.tab-active]="activeTab() === 'past'" (click)="setTab('past')">Past</button>
   </nav>
 
-  @if (actionMessage()) { <div class="message message-success">{{ actionMessage() }}</div> }
-  @if (actionError()) { <div class="message message-error">{{ actionError() }}</div> }
+  <!-- Action messages -->
+  @if (actionMessage()) {
+    <div class="message message-success" role="status">{{ actionMessage() }}</div>
+  }
+  @if (actionError()) {
+    <div class="message message-error" role="alert">{{ actionError() }}</div>
+  }
 
+  <!-- Error state -->
+  @if (errorMessage() && appointments().length === 0) {
+    <div class="error-state">
+      <p>{{ errorMessage() }}</p>
+      <button class="btn btn-secondary" (click)="loadAppointments()">Try Again</button>
+    </div>
+  }
+
+  <!-- Loading state -->
   @if (isLoading() && appointments().length === 0) {
-    <p class="loading">Loading appointments...</p>
-  } @else if (errorMessage() && appointments().length === 0) {
-    <div class="message message-error">{{ errorMessage() }}</div>
-    <button class="btn-primary" (click)="loadAppointments()">Retry</button>
-  } @else if (appointments().length === 0) {
-    <div class="message message-empty">No appointments found.</div>
-    <a routerLink="/patient/doctors" class="btn-link">Find a Doctor</a>
-  } @else {
+    <div class="loading-state">
+      <p>Loading your appointments...</p>
+    </div>
+  }
+
+  <!-- Empty state -->
+  @if (!isLoading() && !errorMessage() && appointments().length === 0) {
+    <div class="empty-state">
+      <p class="empty-state__title">No appointments yet</p>
+      <p>You don't have any {{ activeTab() === 'upcoming' ? 'upcoming' : activeTab() === 'past' ? 'past' : '' }} appointments.</p>
+      <p>Find a doctor and book your first appointment to get started.</p>
+      <a routerLink="/patient/doctors" class="btn btn-primary">Find a Doctor</a>
+    </div>
+  }
+
+  <!-- Appointment list -->
+  @if (appointments().length > 0) {
     <div class="appointment-list">
       @for (appointment of appointments(); track appointment.id) {
-        <div class="appointment-card">
-          <div class="card-header">
-            <span class="status-badge" [class]="statusClass(appointment.status)">
+        <article class="appointment-card card">
+          <div class="appointment-card__header">
+            <span class="appointment-card__date">{{ formatDate(appointment.appointmentDate) }}</span>
+            <span class="badge" [class]="statusClass(appointment.status)">
               {{ statusLabel(appointment.status) }}
             </span>
-            <span class="date">{{ formatDate(appointment.appointmentDate) }}</span>
           </div>
-          <div class="card-body">
-            <p><strong>Doctor ID:</strong> {{ appointment.doctorId }}</p>
-            <p><strong>Time:</strong> {{ formatTime(appointment.startTime) }} - {{ formatTime(appointment.endTime) }}</p>
-            <p><strong>Reason:</strong> {{ appointment.reason }}</p>
-            @if (appointment.doctorNotes) {
-              <p class="notes"><strong>Notes:</strong> {{ appointment.doctorNotes }}</p>
-            }
+
+          <div class="appointment-card__body">
+            <p><span class="appointment-card__label">Time</span> {{ formatTime(appointment.startTime) }} - {{ formatTime(appointment.endTime) }}</p>
+            <p><span class="appointment-card__label">Reason</span> {{ appointment.reason }}</p>
           </div>
+
           @if (canCancel(appointment)) {
             @if (confirmCancelId() === appointment.id) {
               <div class="confirm-dialog">
-                <p>Are you sure you want to cancel this appointment?</p>
-                <button class="btn-cancel" (click)="cancelAppointment(appointment.id)" [disabled]="isCancelling()">
+                <p>Cancel this appointment?</p>
+                <button class="btn btn-danger btn-sm" (click)="cancelAppointment(appointment.id)" [disabled]="isCancelling()">
                   Yes, Cancel
                 </button>
-                <button class="btn-secondary" (click)="dismissConfirm()">No, Keep It</button>
+                <button class="btn btn-secondary btn-sm" (click)="dismissConfirm()">Keep It</button>
               </div>
             } @else {
-              <button class="btn-cancel" (click)="confirmCancel(appointment.id)">
-                Cancel Appointment
-              </button>
-              <a class="btn-link" [routerLink]="['/patient/slots', appointment.doctorId]">
-                Reschedule
-              </a>
+              <div class="appointment-card__footer">
+                <button class="btn btn-danger btn-sm" (click)="confirmCancel(appointment.id)">
+                  Cancel Appointment
+                </button>
+              </div>
             }
           }
-        </div>
+        </article>
       }
     </div>
   }
 
-  <a routerLink="/patient" class="btn-link">Back to Dashboard</a>
+  <div class="appointments-page__actions">
+    <a routerLink="/patient" class="btn-link">Back to Dashboard</a>
+  </div>
 </section>

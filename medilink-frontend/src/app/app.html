@@ -1,39 +1,74 @@
 <div class="app-shell">
-  <header class="topbar">
-    <div>
-      <p class="eyebrow">Healthcare scheduling platform</p>
-      <h1>MediLink</h1>
-    </div>
-    <nav class="topbar__nav">
-      <a routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Overview</a>
-      <a routerLink="/patient" routerLinkActive="is-active">Patient</a>
-      <a routerLink="/doctor" routerLinkActive="is-active">Doctor</a>
-      <a routerLink="/admin" routerLinkActive="is-active">Admin</a>
-      @if (authService.isAuthenticated()) {
-        <button type="button" (click)="authService.logout()">Logout</button>
-      } @else {
-        <a routerLink="/register" routerLinkActive="is-active">Register</a>
-        <a routerLink="/login" routerLinkActive="is-active">Login</a>
+    <header class="topbar">
+      <div class="topbar__brand">
+        <span class="brand-mark" aria-hidden="true">ML</span>
+        <div class="brand-copy">
+          <p class="eyebrow">Healthcare scheduling platform</p>
+          <h1>MediLink</h1>
+        </div>
+      </div>
+
+    <button
+      type="button"
+      class="mobile-toggle"
+      [attr.aria-label]="mobileMenuOpen() ? 'Close menu' : 'Open menu'"
+      [attr.aria-expanded]="mobileMenuOpen()"
+      (click)="toggleMobileMenu()"
+    >
+      <span class="mobile-toggle__bar"></span>
+      <span class="mobile-toggle__bar"></span>
+      <span class="mobile-toggle__bar"></span>
+    </button>
+
+    <nav class="topbar__nav" [class.is-open]="mobileMenuOpen()" aria-label="Main navigation">
+      @for (item of visibleNavItems(); track item.label + (item.route ?? '') + (item.roles?.join() ?? '')) {
+        @if (item.action) {
+          <button type="button" class="nav-link" (click)="handleNavAction(item); closeMobileMenu()">
+            {{ item.label }}
+          </button>
+        } @else if (item.comingSoon) {
+          <span class="nav-link nav-link--disabled">
+            {{ item.label }}
+            <span class="badge badge--soon">Soon</span>
+          </span>
+        } @else {
+          <a
+            class="nav-link"
+            [routerLink]="item.route"
+            routerLinkActive="is-active"
+            [routerLinkActiveOptions]="{ exact: item.route === '/' }"
+            (click)="closeMobileMenu()"
+          >
+            {{ item.label }}
+          </a>
+        }
       }
     </nav>
   </header>
 
   <main class="workspace">
     <aside class="sidebar">
-      <app-page-header
-        title="Foundation Ready"
-        subtitle="Routing, environments, shared services, and role-oriented pages are in place for the MVP."
-      />
+      @if (roleBadge(); as badge) {
+        <span class="badge badge--role">{{ badge }}</span>
+      }
+      <h2 class="sidebar__title">{{ sidebarContext().title }}</h2>
+      <p class="sidebar__subtitle">{{ sidebarContext().subtitle }}</p>
 
-      <section class="sidebar__card">
-        <h2>Access scope</h2>
-        <ul>
-          <li>Login screen connected to the API layer</li>
-          <li>JWT token attached to protected API calls</li>
-          <li>Route guards protecting role workspaces</li>
-          <li>Role-based redirection for admin, doctor, and patient users</li>
-        </ul>
-      </section>
+      <nav class="sidebar__nav" aria-label="Quick links">
+        <p class="sidebar__nav-label">Quick Links</p>
+        @for (item of visibleNavItems(); track item.label + (item.route ?? '')) {
+          @if (!item.action && !item.comingSoon && item.route && item.route !== '/') {
+            <a
+              class="nav-link nav-link--sidebar"
+              [routerLink]="item.route"
+              routerLinkActive="is-active"
+              (click)="closeMobileMenu()"
+            >
+              {{ item.label }}
+            </a>
+          }
+        }
+      </nav>
     </aside>
 
     <section class="content">

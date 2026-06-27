@@ -1,72 +1,61 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Specialty } from '../../shared/models/specialty.model';
+import { SpecialtyManagementService } from '../../shared/services/specialty-management.service';
+
+interface AdminModule {
+  label: string;
+  description: string;
+  route?: string;
+  comingSoon?: boolean;
+  icon: string;
+}
+
+const ADMIN_MODULES: AdminModule[] = [
+  { label: 'Specialties', description: 'Manage medical specialties for doctor profiles and patient search.', route: '/admin/specialties', icon: '&#127973;' },
+  { label: 'Doctors', description: 'Create doctor accounts and manage profile status.', route: '/admin/doctors', icon: '&#128104;&#8205;&#9877;&#65039;' },
+  { label: 'Patients', description: 'Create patient accounts and manage profile status.', route: '/admin/patients', icon: '&#128101;' },
+  { label: 'Appointments', description: 'Oversee all scheduled and completed appointments.', comingSoon: true, icon: '&#128197;' },
+  { label: 'Activity Log', description: 'Review platform activity and audit trail.', comingSoon: true, icon: '&#128269;' },
+];
 
 @Component({
   standalone: true,
   imports: [RouterLink],
-  template: `
-    <section class="admin-dashboard">
-      <div>
-        <p class="eyebrow">Admin workspace</p>
-        <h2>Operations</h2>
-      </div>
-
-      <nav>
-        <a routerLink="/admin/specialties">
-          <span>Specialties</span>
-          <strong>Manage clinical specialties</strong>
-        </a>
-      </nav>
-    </section>
-  `,
-  styles: `
-    .admin-dashboard {
-      padding: 1.5rem;
-      background: #f6f8fb;
-      min-height: 100vh;
-    }
-
-    .eyebrow {
-      margin: 0 0 0.35rem;
-      color: #2563eb;
-      font-size: 0.78rem;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-
-    h2 {
-      margin: 0 0 1rem;
-      color: #172033;
-    }
-
-    nav {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 0.75rem;
-      max-width: 760px;
-    }
-
-    a {
-      display: grid;
-      gap: 0.35rem;
-      border: 1px solid #d9e2ec;
-      border-radius: 8px;
-      padding: 1rem;
-      background: #ffffff;
-      color: #172033;
-      text-decoration: none;
-    }
-
-    span {
-      color: #2563eb;
-      font-weight: 800;
-    }
-
-    strong {
-      font-size: 0.92rem;
-      font-weight: 600;
-    }
-  `,
+  templateUrl: './admin-dashboard.page.html',
+  styleUrl: './admin-dashboard.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AdminDashboardPage {}
+export class AdminDashboardPage implements OnInit {
+  private readonly specialtyService = inject(SpecialtyManagementService);
+
+  readonly specialties = signal<Specialty[]>([]);
+  readonly isLoadingStats = signal(false);
+
+  readonly activeSpecialties = computed(() =>
+    this.specialties().filter((s) => s.status === 'ACTIVE').length
+  );
+
+  readonly inactiveSpecialties = computed(() =>
+    this.specialties().filter((s) => s.status === 'INACTIVE').length
+  );
+
+  readonly modules = ADMIN_MODULES;
+
+  ngOnInit(): void {
+    this.loadStats();
+  }
+
+  loadStats(): void {
+    this.isLoadingStats.set(true);
+    this.specialtyService.listAll().subscribe({
+      next: (specialties) => {
+        this.specialties.set(specialties);
+        this.isLoadingStats.set(false);
+      },
+      error: () => {
+        this.isLoadingStats.set(false);
+      }
+    });
+  }
+}

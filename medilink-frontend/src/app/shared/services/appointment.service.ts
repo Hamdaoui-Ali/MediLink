@@ -37,6 +37,12 @@ export class AppointmentService {
     );
   }
 
+  listDoctorPatientHistory(patientId: number): Observable<Appointment[]> {
+    return this.api.get<Appointment[]>(`/v1/doctor/appointments/patients/${patientId}/appointments`).pipe(
+      map((response) => (response.data ?? response) as Appointment[])
+    );
+  }
+
   updateNotes(id: number, notes: string): Observable<Appointment> {
     return this.api.patch<Appointment>(`/v1/doctor/appointments/${id}/notes`, { notes }).pipe(
       map((response) => (response.data ?? response) as Appointment)

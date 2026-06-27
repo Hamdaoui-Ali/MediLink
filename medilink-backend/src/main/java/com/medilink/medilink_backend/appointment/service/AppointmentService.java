@@ -265,6 +265,13 @@ public class AppointmentService {
 		return toResponse(appointment);
 	}
 
+	@Transactional(readOnly = true)
+	public List<AppointmentResponse> listPatientHistoryForDoctor(Long doctorId, Long patientId) {
+		List<Appointment> appointments = appointmentRepository
+				.findByDoctorIdAndPatientIdOrderByAppointmentDateDescStartTimeDesc(doctorId, patientId);
+		return toResponses(appointments);
+	}
+
 	@Transactional
 	public AppointmentResponse updateNotes(Long doctorId, Long appointmentId, String notes) {
 		Appointment appointment = appointmentRepository.findByIdAndDoctorId(appointmentId, doctorId)
@@ -300,25 +307,44 @@ public class AppointmentService {
 				.distinct()
 				.toList();
 
-		Map<Long, String> patientNames = patientRepository.findPatientNamesByIds(patientIds)
+		List<PatientRef> patientRefs = patientRepository.findPatientRefsByIds(patientIds);
+		if (patientRefs == null) {
+			patientRefs = List.of();
+		}
+
+		Map<Long, PatientRef> patients = patientRefs
 				.stream()
-				.collect(Collectors.toMap(PatientRef::id, PatientRef::fullName));
+				.collect(Collectors.toMap(PatientRef::id, patient -> patient));
 
 		return appointments.stream()
-				.map(appointment -> toResponse(appointment, patientNames.getOrDefault(appointment.getPatientId(), "Unknown")))
+				.map(appointment -> toResponse(appointment, patients.get(appointment.getPatientId())))
 				.toList();
 	}
 
 	private AppointmentResponse toResponse(Appointment appointment) {
-		return toResponse(appointment, "Unknown");
+		Long patientId = appointment.getPatientId();
+		if (patientId == null) {
+			return toResponse(appointment, null);
+		}
+
+		List<PatientRef> patients = patientRepository.findPatientRefsByIds(List.of(patientId));
+		if (patients == null) {
+			patients = List.of();
+		}
+		return toResponse(appointment, patients.isEmpty() ? null : patients.getFirst());
 	}
 
-	private AppointmentResponse toResponse(Appointment appointment, String patientName) {
+	private AppointmentResponse toResponse(Appointment appointment, PatientRef patient) {
 		return new AppointmentResponse(
 				appointment.getId(),
 				appointment.getDoctorId(),
 				appointment.getPatientId(),
-				patientName,
+				patient != null ? patient.fullName() : "Unknown",
+				patient != null ? patient.email() : null,
+				patient != null ? patient.phoneNumber() : null,
+				patient != null ? patient.dateOfBirth() : null,
+				patient != null && patient.gender() != null ? patient.gender().name() : null,
+				patient != null ? patient.address() : null,
 				appointment.getAppointmentDate(),
 				appointment.getStartTime(),
 				appointment.getEndTime(),

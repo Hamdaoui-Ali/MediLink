@@ -1,0 +1,80 @@
+<section class="dashboard">
+  <!-- Welcome -->
+  <div class="dashboard__welcome card">
+    <div class="card-body welcome-body">
+      <h1 class="welcome-body__title">Welcome, Dr. {{ userName().split(' ').pop() }}</h1>
+      <p class="welcome-body__subtitle">Your daily practice overview and quick actions.</p>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="dashboard__actions">
+    <a routerLink="/doctor/appointments" class="card action-card">
+      <span class="action-card__icon">&#128197;</span>
+      <h2 class="action-card__title">Appointments</h2>
+      <p class="action-card__desc">View and manage your patient appointments.</p>
+    </a>
+    <a routerLink="/doctor/blocked-slots" class="card action-card">
+      <span class="action-card__icon">&#128683;</span>
+      <h2 class="action-card__title">Blocked Slots</h2>
+      <p class="action-card__desc">Set unavailable times for appointments.</p>
+    </a>
+    <a routerLink="/doctor/availability" class="card action-card">
+      <span class="action-card__icon">&#9200;</span>
+      <h2 class="action-card__title">Availability</h2>
+      <p class="action-card__desc">Manage your recurring weekly working hours.</p>
+    </a>
+    <a routerLink="/doctor/profile" class="card action-card">
+      <span class="action-card__icon">&#128100;</span>
+      <h2 class="action-card__title">My Profile</h2>
+      <p class="action-card__desc">Update your biography, address, and settings.</p>
+    </a>
+  </div>
+
+  <!-- Profile completion prompt -->
+  @if (profileIncomplete()) {
+    <div class="card prompt-card prompt-card--action">
+      <div class="card-body">
+        <p class="prompt-card__title">Complete Your Profile</p>
+        <p>Add your biography and clinic address so patients can learn more about you.</p>
+        <a routerLink="/doctor/profile" class="btn btn-primary btn-sm">Update Profile</a>
+      </div>
+    </div>
+  }
+
+  <!-- Today's Schedule -->
+  <div class="dashboard__section">
+    <h2 class="dashboard__section-title">Today's Schedule</h2>
+
+    @if (isAppointmentsLoading()) {
+      <div class="loading-state">Loading your schedule...</div>
+    } @else if (appointmentsError()) {
+      <div class="card schedule-card schedule-card--error">
+        <p>Unable to load your schedule.</p>
+        <button class="btn btn-secondary btn-sm" (click)="loadAppointments()">Retry</button>
+      </div>
+    } @else if (todayAppointments().length > 0) {
+      <div class="card schedule-card">
+        @for (apt of todayAppointments(); track apt.id) {
+          <div class="schedule-card__item">
+            <div class="schedule-card__time">
+              {{ formatTime(apt.startTime) }} - {{ formatTime(apt.endTime) }}
+            </div>
+            <div class="schedule-card__info">
+              <p class="schedule-card__patient">{{ apt.patientName }}</p>
+              <p class="schedule-card__reason">{{ apt.reason }}</p>
+            </div>
+            <span class="badge badge-info">{{ statusLabel(apt.status) }}</span>
+          </div>
+        }
+      </div>
+    } @else if (upcomingAppointments().length > 0) {
+      <p class="muted-text">No appointments today. Your next appointment is {{ formatDate(upcomingAppointments()[0].appointmentDate) }}.</p>
+      <p class="muted-text">{{ upcomingAppointments().length }} upcoming appointment{{ upcomingAppointments().length === 1 ? '' : 's' }} &middot; <a routerLink="/doctor/appointments" class="btn-link">View all</a></p>
+    } @else {
+      <div class="card schedule-card schedule-card--empty">
+        <p>No upcoming appointments. When patients book, they will appear here.</p>
+      </div>
+    }
+  </div>
+</section>

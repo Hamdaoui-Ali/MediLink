@@ -43,6 +43,13 @@ public class DoctorAvailability {
 
 	protected DoctorAvailability() {}
 
+	public DoctorAvailability(Long doctorId, Integer dayOfWeek, LocalTime startTime, LocalTime endTime) {
+		this.doctorId = doctorId;
+		this.dayOfWeek = dayOfWeek;
+		this.startTime = startTime;
+		this.endTime = endTime;
+	}
+
 	public Long getId() {
 		return id;
 	}
@@ -73,6 +80,16 @@ public class DoctorAvailability {
 
 	public Instant getUpdatedAt() {
 		return updatedAt;
+	}
+
+	public void update(Integer dayOfWeek, LocalTime startTime, LocalTime endTime) {
+		this.dayOfWeek = dayOfWeek;
+		this.startTime = startTime;
+		this.endTime = endTime;
+	}
+
+	public void deactivate() {
+		this.active = false;
 	}
 
 	@PrePersist

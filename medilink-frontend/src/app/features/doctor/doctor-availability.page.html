@@ -1,0 +1,101 @@
+<section class="availability-shell">
+  <header class="availability-header">
+    <div>
+      <a routerLink="/doctor" class="back-link btn-link">Doctor Dashboard</a>
+      <h1>Weekly Availability</h1>
+    </div>
+    <button type="button" class="btn btn-secondary" (click)="loadAvailability()" [disabled]="isLoading()">
+      Refresh
+    </button>
+  </header>
+
+  <div class="availability-grid">
+    <form class="availability-form card" [formGroup]="availabilityForm" (ngSubmit)="saveAvailability()" novalidate>
+      <div class="panel-heading">
+        <h2>{{ selectedAvailability() ? 'Edit Hours' : 'Add Hours' }}</h2>
+        <p>Define the recurring working hours patients can book from.</p>
+      </div>
+
+      <label class="form-label">
+        <span>Day</span>
+        <select formControlName="dayOfWeek" class="form-input">
+          @for (day of days; track day.value) {
+            <option [ngValue]="day.value">{{ day.label }}</option>
+          }
+        </select>
+      </label>
+      @if (hasError('dayOfWeek')) {
+        <p class="form-error">Choose a day of the week.</p>
+      }
+
+      <div class="time-row">
+        <label class="form-label">
+          <span>Start Time</span>
+          <input type="time" formControlName="startTime" class="form-input" />
+        </label>
+        <label class="form-label">
+          <span>End Time</span>
+          <input type="time" formControlName="endTime" class="form-input" />
+        </label>
+      </div>
+      @if (hasError('startTime')) {
+        <p class="form-error">Start time is required.</p>
+      }
+      @if (hasError('endTime')) {
+        <p class="form-error">End time is required.</p>
+      }
+
+      @if (errorMessage()) {
+        <p class="message message-error" role="alert">{{ errorMessage() }}</p>
+      }
+      @if (successMessage()) {
+        <p class="message message-success" role="status">{{ successMessage() }}</p>
+      }
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+          {{ isSaving() ? 'Saving...' : selectedAvailability() ? 'Save Changes' : 'Add Availability' }}
+        </button>
+        @if (selectedAvailability()) {
+          <button type="button" class="btn btn-secondary" (click)="resetForm()" [disabled]="isSaving()">
+            Cancel Edit
+          </button>
+        }
+      </div>
+    </form>
+
+    <section class="availability-list card" aria-labelledby="availability-list-title">
+      <div class="card-header">
+        <h2 id="availability-list-title">Current Weekly Schedule</h2>
+        <p>{{ availability().length }} range{{ availability().length === 1 ? '' : 's' }}</p>
+      </div>
+
+      @if (isLoading()) {
+        <p class="loading-state">Loading availability...</p>
+      } @else if (availability().length === 0) {
+        <p class="empty-state">No weekly availability has been added yet.</p>
+      } @else {
+        <div class="day-list">
+          @for (day of groupedAvailability(); track day.value) {
+            @if (day.ranges.length > 0) {
+              <section class="day-row">
+                <h3>{{ day.label }}</h3>
+                <div class="range-list">
+                  @for (range of day.ranges; track range.id) {
+                    <article class="range-item">
+                      <span>{{ formatTime(range.startTime) }} - {{ formatTime(range.endTime) }}</span>
+                      <div class="range-actions">
+                        <button type="button" class="btn btn-secondary" (click)="editAvailability(range)">Edit</button>
+                        <button type="button" class="btn btn-danger" (click)="deleteAvailability(range)">Remove</button>
+                      </div>
+                    </article>
+                  }
+                </div>
+              </section>
+            }
+          }
+        </div>
+      }
+    </section>
+  </div>
+</section>

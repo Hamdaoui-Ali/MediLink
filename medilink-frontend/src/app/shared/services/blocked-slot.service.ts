@@ -21,6 +21,12 @@ export class BlockedSlotService {
     );
   }
 
+  updateBlockedSlot(id: number, request: BlockedSlotRequest): Observable<BlockedSlot> {
+    return this.api.patch<BlockedSlot>(`/v1/doctor/blocked-slots/${id}`, request).pipe(
+      map((response) => (response.data ?? response) as BlockedSlot)
+    );
+  }
+
   deleteBlockedSlot(id: number): Observable<void> {
     return this.api.delete<void>(`/v1/doctor/blocked-slots/${id}`).pipe(
       map(() => undefined)

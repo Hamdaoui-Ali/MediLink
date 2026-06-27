@@ -1,0 +1,64 @@
+<section class="dashboard">
+  <!-- Welcome -->
+  <div class="dashboard__welcome card">
+    <div class="card-body welcome-body">
+      <h1 class="welcome-body__title">
+        Welcome{{ userName() ? ', ' + userName().split(' ')[0] : '' }}
+      </h1>
+      <p class="welcome-body__subtitle">Manage your healthcare appointments from one place.</p>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="dashboard__actions">
+    <a routerLink="/patient/doctors" class="card action-card">
+      <span class="action-card__icon">&#128269;</span>
+      <h2 class="action-card__title">Find a Doctor</h2>
+      <p class="action-card__desc">Search for specialists and view available slots.</p>
+    </a>
+    <a routerLink="/patient/appointments" class="card action-card">
+      <span class="action-card__icon">&#128197;</span>
+      <h2 class="action-card__title">My Appointments</h2>
+      <p class="action-card__desc">View and manage your upcoming and past appointments.</p>
+    </a>
+    <a routerLink="/patient/book" class="card action-card">
+      <span class="action-card__icon">&#128196;</span>
+      <h2 class="action-card__title">Book Appointment</h2>
+      <p class="action-card__desc">Enter details to schedule a new appointment.</p>
+    </a>
+  </div>
+
+  <!-- Next Appointment -->
+  <div class="dashboard__section">
+    <h2 class="dashboard__section-title">Upcoming Appointment</h2>
+
+    @if (isLoading()) {
+      <div class="loading-state">Loading your schedule...</div>
+    } @else if (loadError()) {
+      <div class="card upcoming-card upcoming-card--error">
+        <p>Unable to load your upcoming appointments.</p>
+        <button class="btn btn-secondary btn-sm" (click)="loadUpcomingAppointments()">Retry</button>
+      </div>
+    } @else if (nextAppointment(); as apt) {
+      <div class="card upcoming-card">
+        <div class="card-body">
+          <p class="upcoming-card__date">{{ formatDate(apt.appointmentDate) }}</p>
+          <p class="upcoming-card__time">{{ formatTime(apt.startTime) }} - {{ formatTime(apt.endTime) }}</p>
+          <p class="upcoming-card__reason">{{ apt.reason }}</p>
+          <span class="badge badge-info">{{ statusLabel(apt.status) }}</span>
+        </div>
+      </div>
+      @if (upcomingAppointments().length > 1) {
+        <p class="upcoming-card__more">
+          +{{ upcomingAppointments().length - 1 }} more upcoming appointment{{ upcomingAppointments().length - 1 === 1 ? '' : 's' }}
+          &middot; <a routerLink="/patient/appointments" class="btn-link">View all</a>
+        </p>
+      }
+    } @else if (hasLoaded()) {
+      <div class="card upcoming-card upcoming-card--empty">
+        <p>You have no upcoming appointments.</p>
+        <a routerLink="/patient/doctors" class="btn btn-primary btn-sm">Find a Doctor</a>
+      </div>
+    }
+  </div>
+</section>

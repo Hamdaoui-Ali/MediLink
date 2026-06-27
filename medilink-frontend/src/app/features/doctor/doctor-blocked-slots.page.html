@@ -1,73 +1,80 @@
 <section class="blocked-shell">
   <header class="blocked-header">
     <div>
-      <a routerLink="/doctor" class="back-link">Doctor Dashboard</a>
+      <a routerLink="/doctor" class="back-link btn-link">Doctor Dashboard</a>
       <h1>Blocked Slots</h1>
     </div>
-    <button type="button" class="secondary-action" (click)="loadBlockedSlots()" [disabled]="isLoading()">
+    <button type="button" class="btn btn-secondary" (click)="loadBlockedSlots()" [disabled]="isLoading()">
       Refresh
     </button>
   </header>
 
   <div class="blocked-grid">
-    <form class="blocked-form" [formGroup]="slotForm" (ngSubmit)="createBlockedSlot()" novalidate>
+    <form class="blocked-form card" [formGroup]="slotForm" (ngSubmit)="saveBlockedSlot()" novalidate>
       <div class="panel-heading">
-        <h2>Block Time</h2>
+        <h2>{{ selectedSlot() ? 'Edit Blocked Time' : 'Block Time' }}</h2>
         <p>Prevent patients from booking during this period.</p>
       </div>
 
-      <label>
+      <label class="form-label">
         <span>Date</span>
-        <input type="date" formControlName="blockDate" [min]="getMinDate()" />
+        <input type="date" formControlName="blockDate" [min]="getMinDate()" class="form-input" />
       </label>
       @if (hasError('blockDate')) {
-        <p class="field-error">Date is required.</p>
+        <p class="form-error">Date is required.</p>
       }
 
       <div class="time-row">
-        <label>
+        <label class="form-label">
           <span>Start Time</span>
-          <input type="time" formControlName="startTime" />
+          <input type="time" formControlName="startTime" class="form-input" />
         </label>
-        <label>
+        <label class="form-label">
           <span>End Time</span>
-          <input type="time" formControlName="endTime" />
+          <input type="time" formControlName="endTime" class="form-input" />
         </label>
       </div>
       @if (hasError('startTime')) {
-        <p class="field-error">Start time is required.</p>
+        <p class="form-error">Start time is required.</p>
       }
       @if (hasError('endTime')) {
-        <p class="field-error">End time is required.</p>
+        <p class="form-error">End time is required.</p>
       }
 
-      <label>
+      <label class="form-label">
         <span>Reason (optional)</span>
-        <input type="text" formControlName="reason" placeholder="e.g. Vacation, conference" autocomplete="off" />
+        <input type="text" formControlName="reason" placeholder="e.g. Vacation, conference" autocomplete="off" class="form-input" />
       </label>
 
       @if (errorMessage()) {
-        <p class="form-error" role="alert">{{ errorMessage() }}</p>
+        <p class="message message-error" role="alert">{{ errorMessage() }}</p>
       }
       @if (successMessage()) {
-        <p class="form-success" role="status">{{ successMessage() }}</p>
+        <p class="message message-success" role="status">{{ successMessage() }}</p>
       }
 
-      <button type="submit" [disabled]="isSaving()">
-        {{ isSaving() ? 'Saving...' : 'Block Slot' }}
-      </button>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+          {{ isSaving() ? 'Saving...' : selectedSlot() ? 'Save Changes' : 'Block Slot' }}
+        </button>
+        @if (selectedSlot()) {
+          <button type="button" class="btn btn-secondary" (click)="resetForm()" [disabled]="isSaving()">
+            Cancel Edit
+          </button>
+        }
+      </div>
     </form>
 
-    <section class="blocked-list" aria-labelledby="blocked-list-title">
-      <div class="panel-heading">
+    <section class="blocked-list card" aria-labelledby="blocked-list-title">
+      <div class="card-header">
         <h2 id="blocked-list-title">Existing Blocked Slots</h2>
         <p>{{ blockedSlots().length }} total</p>
       </div>
 
       @if (isLoading()) {
-        <p class="state-text">Loading blocked slots...</p>
+        <p class="loading-state">Loading blocked slots...</p>
       } @else if (blockedSlots().length === 0) {
-        <p class="state-text">No blocked slots yet.</p>
+        <p class="empty-state">No blocked slots yet.</p>
       } @else {
         <div class="table-wrap">
           <table>
@@ -86,7 +93,10 @@
                   <td>{{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}</td>
                   <td>{{ slot.reason || 'No reason provided' }}</td>
                   <td class="actions">
-                    <button type="button" class="danger-action" (click)="deleteBlockedSlot(slot)">
+                    <button type="button" class="btn btn-secondary" (click)="editBlockedSlot(slot)">
+                      Edit
+                    </button>
+                    <button type="button" class="btn btn-danger" (click)="deleteBlockedSlot(slot)">
                       Remove
                     </button>
                   </td>

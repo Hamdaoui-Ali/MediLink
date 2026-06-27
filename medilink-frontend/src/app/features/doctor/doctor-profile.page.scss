@@ -1,22 +1,39 @@
 .profile-shell {
-  min-height: 100vh;
-  padding: 2rem;
-  background: #f6f8fb;
-  color: #172033;
+  min-height: auto;
+  padding: clamp(1rem, 2vw, var(--space-xl));
+  background: transparent;
+  color: var(--color-text);
 }
 
 .profile-header {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
   margin: 0 auto 1.5rem;
   max-width: 900px;
+  padding: var(--space-lg);
+  border: 1px solid rgba(15, 118, 110, 0.14);
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(6, 182, 212, 0.16), transparent 18rem),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(240, 253, 250, 0.96));
+  box-shadow: var(--shadow-card);
+}
+
+.profile-header::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: linear-gradient(180deg, var(--color-primary), var(--color-accent));
 }
 
 .back-link {
-  color: #2563eb;
-  font-size: 0.88rem;
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
   font-weight: 700;
   text-decoration: none;
 }
@@ -27,6 +44,7 @@ h1, h2, p {
 
 h1 {
   font-size: 2rem;
+  color: var(--color-primary-dark);
 }
 
 h2 {
@@ -37,27 +55,28 @@ h2 {
 .profile-panel {
   max-width: 900px;
   margin: 0 auto;
-  border: 1px solid #d9e2ec;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 12px 30px rgb(15 23 42 / 8%);
-  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 252, 253, 0.94));
+  box-shadow: var(--shadow-card);
+  padding: var(--space-lg);
 }
 
 .profile-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-  gap: 2rem;
+  gap: var(--space-xl);
 }
 
 .info-field {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-md);
 }
 
 .info-label {
   display: block;
-  color: #667085;
-  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
   font-weight: 700;
   text-transform: uppercase;
   margin-bottom: 0.15rem;
@@ -71,40 +90,41 @@ h2 {
   display: inline-flex;
   min-width: 64px;
   justify-content: center;
-  border-radius: 999px;
-  padding: 0.22rem 0.5rem;
-  background: #dcfce7;
-  color: #166534;
+  border-radius: var(--radius-pill);
+  padding: 0.22rem var(--space-sm);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
   font-size: 0.74rem;
   font-weight: 800;
 }
 
 .status-badge.inactive {
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--color-gray-bg);
+  color: var(--color-gray-text);
 }
 
 .edit-section {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-md);
 }
 
 label {
   display: grid;
   gap: 0.38rem;
-  color: #475467;
-  font-size: 0.88rem;
+  color: var(--color-text-label);
+  font-size: var(--font-size-sm);
   font-weight: 700;
 }
 
 input, textarea {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-sm);
   padding: 0.72rem 0.82rem;
-  color: #172033;
+  color: var(--color-text);
+  background: #ffffff;
   font: inherit;
 }
 
@@ -113,57 +133,56 @@ textarea {
 }
 
 .hint-text {
-  color: #667085;
+  color: var(--color-text-muted);
   font-size: 0.82rem;
-  padding: 0.5rem 0.75rem;
-  background: #f8fafc;
-  border-radius: 6px;
-  border: 1px solid #e6edf3;
+  padding: var(--space-sm) 0.75rem;
+  background: linear-gradient(180deg, #ffffff, var(--color-surface-soft));
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(15, 118, 110, 0.12);
 }
 
 .state-text, .error-text {
-  font-size: 0.92rem;
-  padding: 1.5rem;
+  font-size: var(--font-size-md);
+  padding: var(--space-lg);
 }
 
 .state-text {
-  color: #667085;
+  color: var(--color-text-muted);
 }
 
 .error-text {
-  color: #b42318;
-  background: #fff1f2;
-  border-radius: 6px;
+  color: var(--color-danger-text);
+  background: var(--color-danger-bg);
+  border-radius: var(--radius-sm);
 }
 
 .field-error, .form-error, .form-success {
-  font-size: 0.88rem;
+  font-size: var(--font-size-sm);
 }
 
 .field-error, .form-error {
-  color: #b42318;
+  color: var(--color-danger-text);
 }
 
 .form-error, .form-success {
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 0.75rem;
 }
 
 .form-error {
-  background: #fff1f2;
+  background: var(--color-danger-bg);
 }
 
 .form-success {
-  background: #ecfdf3;
-  color: #067647;
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
 }
 
 button {
   min-height: 38px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 0 0.9rem;
-  background: #1d4ed8;
   color: #ffffff;
   cursor: pointer;
   font-weight: 800;
@@ -176,11 +195,14 @@ button:disabled {
 
 @media (max-width: 700px) {
   .profile-shell {
-    padding: 1rem;
+    padding: 0;
   }
 
   .profile-header {
     max-width: none;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--space-md);
   }
 
   .profile-grid {

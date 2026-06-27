@@ -11,6 +11,7 @@ describe('DoctorAppointmentsPage', () => {
   let component: DoctorAppointmentsPage;
   let appointmentService: {
     listDoctorAppointments: ReturnType<typeof vi.fn>;
+    listDoctorPatientHistory: ReturnType<typeof vi.fn>;
     updateNotes: ReturnType<typeof vi.fn>;
     updateStatus: ReturnType<typeof vi.fn>;
   };
@@ -21,6 +22,11 @@ describe('DoctorAppointmentsPage', () => {
       doctorId: 1,
       patientId: 2,
       patientName: 'Jane Patient',
+      patientEmail: 'jane.patient@medilink.local',
+      patientPhoneNumber: '+15551234567',
+      patientDateOfBirth: '1990-01-15',
+      patientGender: 'FEMALE',
+      patientAddress: '123 Patient St',
       appointmentDate: '2026-06-15',
       startTime: '10:00:00',
       endTime: '10:30:00',
@@ -33,6 +39,11 @@ describe('DoctorAppointmentsPage', () => {
       doctorId: 1,
       patientId: 3,
       patientName: 'John Smith',
+      patientEmail: 'john.smith@medilink.local',
+      patientPhoneNumber: null,
+      patientDateOfBirth: null,
+      patientGender: null,
+      patientAddress: null,
       appointmentDate: '2026-06-16',
       startTime: '14:00:00',
       endTime: '14:30:00',
@@ -45,6 +56,11 @@ describe('DoctorAppointmentsPage', () => {
       doctorId: 1,
       patientId: 4,
       patientName: 'Alice Brown',
+      patientEmail: null,
+      patientPhoneNumber: null,
+      patientDateOfBirth: null,
+      patientGender: null,
+      patientAddress: null,
       appointmentDate: '2026-06-14',
       startTime: '09:00:00',
       endTime: '09:30:00',
@@ -57,6 +73,7 @@ describe('DoctorAppointmentsPage', () => {
   beforeEach(async () => {
     appointmentService = {
       listDoctorAppointments: vi.fn().mockReturnValue(of(mockAppointments)),
+      listDoctorPatientHistory: vi.fn().mockReturnValue(of([mockAppointments[1], mockAppointments[0]])),
       updateNotes: vi.fn(),
       updateStatus: vi.fn()
     };
@@ -101,6 +118,8 @@ describe('DoctorAppointmentsPage', () => {
 
     expect(component.selectedAppointment()?.id).toBe(2);
     expect(component.notesDraft()).toBe('All clear');
+    expect(appointmentService.listDoctorPatientHistory).toHaveBeenCalledWith(3);
+    expect(component.patientHistory().length).toBe(2);
     expect(component.detailMessage()).toBe('');
     expect(component.detailError()).toBe('');
   });
@@ -110,6 +129,7 @@ describe('DoctorAppointmentsPage', () => {
     component.clearSelection();
 
     expect(component.selectedAppointment()).toBeNull();
+    expect(component.patientHistory().length).toBe(0);
   });
 
   it('should save notes and update the appointment in the list', () => {
@@ -188,6 +208,13 @@ describe('DoctorAppointmentsPage', () => {
     expect(formatted).toContain('2026');
     expect(formatted).toContain('Jun');
     expect(formatted).toContain('15');
+  });
+
+  it('should format patient demographics', () => {
+    expect(component.formatGender('FEMALE')).toBe('Female');
+    expect(component.formatGender(null)).toBe('Not recorded');
+    expect(component.contactValue('')).toBe('Not recorded');
+    expect(component.formatAge(null)).toBe('Not recorded');
   });
 
   it('should return correct status label', () => {

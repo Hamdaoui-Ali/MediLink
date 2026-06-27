@@ -66,4 +66,10 @@ public class Patient {
 	public String getAddress() {
 		return address;
 	}
+
+	public void update(LocalDate dateOfBirth, Gender gender, String address) {
+		this.dateOfBirth = dateOfBirth;
+		this.gender = gender;
+		this.address = address;
+	}
 }

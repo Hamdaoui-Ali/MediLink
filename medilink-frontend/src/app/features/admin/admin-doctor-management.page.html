@@ -1,0 +1,234 @@
+<section class="doctor-admin">
+  <header class="doctor-admin__header">
+    <div>
+      <a routerLink="/admin" class="back-link btn-link">Admin Dashboard</a>
+      <h1>Doctor Management</h1>
+      <p>Create and manage doctor accounts used by the doctor workspace.</p>
+    </div>
+    <button type="button" class="btn btn-secondary" (click)="loadData()" [disabled]="isLoading()">Refresh</button>
+  </header>
+
+  <div class="doctor-admin__grid">
+    <form class="doctor-form card" [formGroup]="doctorForm" (ngSubmit)="saveDoctor()" novalidate>
+      <div class="panel-heading">
+        <h2>{{ selectedDoctor() ? 'Edit Doctor' : 'Create Doctor' }}</h2>
+        <p>{{ selectedDoctor() ? 'Update account, specialty, and profile fields.' : 'Create a login account and linked doctor profile.' }}</p>
+      </div>
+
+      <label class="form-label">
+        <span>Full Name</span>
+        <input class="form-input" type="text" formControlName="fullName" autocomplete="off" />
+      </label>
+      @if (hasError('fullName')) { <p class="form-error">Full name is required.</p> }
+
+      <label class="form-label">
+        <span>Email</span>
+        <input class="form-input" type="email" formControlName="email" autocomplete="off" />
+      </label>
+      @if (hasError('email')) { <p class="form-error">Enter a valid email.</p> }
+
+      @if (!selectedDoctor()) {
+        <label class="form-label">
+          <span>Temporary Password</span>
+          <input class="form-input" type="password" formControlName="password" autocomplete="new-password" />
+        </label>
+        @if (hasError('password')) { <p class="form-error">Password must be at least 8 characters.</p> }
+      }
+
+      <label class="form-label">
+        <span>Phone Number</span>
+        <input class="form-input" type="text" formControlName="phoneNumber" autocomplete="off" />
+      </label>
+
+      <label class="form-label">
+        <span>Specialty</span>
+        <select class="form-input" formControlName="specialtyId">
+          <option [ngValue]="0">Select specialty</option>
+          @for (specialty of activeSpecialties(); track specialty.id) {
+            <option [ngValue]="specialty.id">{{ specialty.name }}</option>
+          }
+        </select>
+      </label>
+      @if (hasError('specialtyId')) { <p class="form-error">Specialty is required.</p> }
+
+      <label class="form-label">
+        <span>Consultation Duration</span>
+        <input class="form-input" type="number" min="5" formControlName="consultationDurationMinutes" />
+      </label>
+      @if (hasError('consultationDurationMinutes')) { <p class="form-error">Duration must be at least 5 minutes.</p> }
+
+      <label class="form-label">
+        <span>Clinic Address</span>
+        <input class="form-input" type="text" formControlName="clinicAddress" autocomplete="off" />
+      </label>
+
+      <label class="form-label">
+        <span>Biography</span>
+        <textarea class="form-input" rows="4" formControlName="biography"></textarea>
+      </label>
+
+      @if (errorMessage()) { <p class="message message-error" role="alert">{{ errorMessage() }}</p> }
+      @if (successMessage()) { <p class="message message-success" role="status">{{ successMessage() }}</p> }
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+          {{ isSaving() ? 'Saving...' : selectedDoctor() ? 'Save Changes' : 'Create Doctor' }}
+        </button>
+        @if (selectedDoctor()) {
+          <button type="button" class="btn btn-secondary" (click)="resetForm()" [disabled]="isSaving()">Cancel Edit</button>
+        }
+      </div>
+    </form>
+
+    <section class="doctor-list card" aria-labelledby="doctor-list-title">
+      <div class="card-header">
+        <h2 id="doctor-list-title">Doctors</h2>
+        <p>{{ doctors().length }} total · {{ activeDoctorCount() }} active · {{ inactiveDoctorCount() }} inactive</p>
+      </div>
+
+      <div class="doctor-filters">
+        <label>
+          <span>Search</span>
+          <input
+            class="form-input"
+            type="search"
+            placeholder="Name, email, phone, or specialty"
+            [value]="searchTerm()"
+            (input)="searchTerm.set($any($event.target).value)"
+          />
+        </label>
+        <label>
+          <span>Status</span>
+          <select class="form-input" [value]="statusFilter()" (change)="setStatusFilter($any($event.target).value)">
+            <option value="ALL">All statuses</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+          </select>
+        </label>
+        <label>
+          <span>Specialty</span>
+          <select class="form-input" [value]="specialtyFilter()" (change)="setSpecialtyFilter($any($event.target).value)">
+            <option [value]="0">All specialties</option>
+            @for (specialty of specialties(); track specialty.id) {
+              <option [value]="specialty.id">{{ specialty.name }}</option>
+            }
+          </select>
+        </label>
+        <button type="button" class="btn btn-secondary" (click)="clearFilters()">Clear</button>
+      </div>
+
+      @if (isLoading()) {
+        <p class="loading-state">Loading doctors...</p>
+      } @else if (doctors().length === 0) {
+        <p class="empty-state">No doctors have been created yet.</p>
+      } @else if (filteredDoctors().length === 0) {
+        <p class="empty-state">No doctors match the current filters.</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Doctor</th>
+                <th>Specialty</th>
+                <th>Status</th>
+                <th>Duration</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (doctor of filteredDoctors(); track doctor.id) {
+                <tr [class.is-selected]="detailDoctor()?.id === doctor.id">
+                  <td>
+                    <strong>{{ doctor.fullName }}</strong>
+                    <span>{{ doctor.email }}</span>
+                  </td>
+                  <td>{{ doctor.specialtyName }}</td>
+                  <td>
+                    <span class="badge" [class.badge-success]="doctor.status === 'ACTIVE'" [class.badge-muted]="doctor.status !== 'ACTIVE'">
+                      {{ doctor.status }}
+                    </span>
+                  </td>
+                  <td>{{ doctor.consultationDurationMinutes }} min</td>
+                  <td class="actions">
+                    <button type="button" class="btn btn-secondary" (click)="selectDoctor(doctor)">View</button>
+                    <button type="button" class="btn btn-secondary" (click)="editDoctor(doctor)">Edit</button>
+                    @if (doctor.status === 'ACTIVE') {
+                      <button type="button" class="btn btn-danger" (click)="deactivateDoctor(doctor)">Deactivate</button>
+                    } @else {
+                      <button type="button" class="btn btn-primary" (click)="activateDoctor(doctor)">Activate</button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <aside class="doctor-detail card" aria-labelledby="doctor-detail-title">
+      @if (detailDoctor(); as doctor) {
+        <div class="card-header">
+          <div>
+            <h2 id="doctor-detail-title">{{ doctor.fullName }}</h2>
+            <p>{{ doctor.specialtyName }}</p>
+          </div>
+          <span class="badge" [class.badge-success]="doctor.status === 'ACTIVE'" [class.badge-muted]="doctor.status !== 'ACTIVE'">
+            {{ doctor.status }}
+          </span>
+        </div>
+
+        <div class="detail-grid">
+          <div>
+            <span>Email</span>
+            <strong>{{ doctor.email }}</strong>
+          </div>
+          <div>
+            <span>Phone</span>
+            <strong>{{ doctor.phoneNumber || 'Not recorded' }}</strong>
+          </div>
+          <div>
+            <span>Account</span>
+            <strong>{{ doctor.accountStatus }}</strong>
+          </div>
+          <div>
+            <span>Duration</span>
+            <strong>{{ doctor.consultationDurationMinutes }} minutes</strong>
+          </div>
+        </div>
+
+        @if (doctor.clinicAddress) {
+          <section class="detail-section">
+            <h3>Clinic Address</h3>
+            <p>{{ doctor.clinicAddress }}</p>
+          </section>
+        }
+
+        @if (doctor.biography) {
+          <section class="detail-section">
+            <h3>Biography</h3>
+            <p>{{ doctor.biography }}</p>
+          </section>
+        }
+
+        <form class="password-reset" [formGroup]="passwordForm" (ngSubmit)="resetPassword()" novalidate>
+          <h3>Reset Password</h3>
+          <label>
+            <span>New Temporary Password</span>
+            <input class="form-input" type="password" formControlName="password" autocomplete="new-password" />
+          </label>
+          @if (hasPasswordError()) { <p class="form-error">Password must be at least 8 characters.</p> }
+          <button type="submit" class="btn btn-primary" [disabled]="isResettingPassword()">
+            {{ isResettingPassword() ? 'Resetting...' : 'Reset Password' }}
+          </button>
+          @if (resetPasswordError()) { <p class="message message-error" role="alert">{{ resetPasswordError() }}</p> }
+          @if (resetPasswordMessage()) { <p class="message message-success" role="status">{{ resetPasswordMessage() }}</p> }
+        </form>
+      } @else {
+        <div class="empty-state detail-empty">
+          <p>Select a doctor to view account details and reset the temporary password.</p>
+        </div>
+      }
+    </aside>
+  </div>
+</section>

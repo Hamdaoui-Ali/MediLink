@@ -29,6 +29,9 @@ export class DoctorAppointmentsPage implements OnInit {
   readonly dateFilter = signal('');
 
   readonly selectedAppointment = signal<Appointment | null>(null);
+  readonly patientHistory = signal<Appointment[]>([]);
+  readonly isLoadingHistory = signal(false);
+  readonly historyError = signal('');
   readonly notesDraft = signal('');
   readonly isSavingNotes = signal(false);
   readonly isUpdatingStatus = signal(false);
@@ -83,12 +86,17 @@ export class DoctorAppointmentsPage implements OnInit {
   selectAppointment(appointment: Appointment): void {
     this.selectedAppointment.set(appointment);
     this.notesDraft.set(appointment.doctorNotes ?? '');
+    this.patientHistory.set([]);
+    this.historyError.set('');
     this.detailMessage.set('');
     this.detailError.set('');
+    this.loadPatientHistory(appointment.patientId);
   }
 
   clearSelection(): void {
     this.selectedAppointment.set(null);
+    this.patientHistory.set([]);
+    this.historyError.set('');
   }
 
   saveNotes(): void {
@@ -176,13 +184,59 @@ export class DoctorAppointmentsPage implements OnInit {
 
   statusClass(status: AppointmentStatus): string {
     const classes: Record<AppointmentStatus, string> = {
-      CONFIRMED: 'status-confirmed',
-      CANCELLED: 'status-cancelled',
-      COMPLETED: 'status-completed',
-      MISSED: 'status-missed',
-      RESCHEDULED: 'status-rescheduled'
+      CONFIRMED: 'badge-info',
+      CANCELLED: 'badge-muted',
+      COMPLETED: 'badge-success',
+      MISSED: 'badge-warning',
+      RESCHEDULED: 'badge-purple'
     };
-    return classes[status] ?? '';
+    return classes[status] ?? 'badge-muted';
+  }
+
+  formatGender(gender: string | null): string {
+    if (!gender) return 'Not recorded';
+    return gender
+      .toLowerCase()
+      .split('_')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  }
+
+  formatAge(dateOfBirth: string | null): string {
+    if (!dateOfBirth) return 'Not recorded';
+    const birthDate = new Date(dateOfBirth + 'T00:00:00');
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDelta = today.getMonth() - birthDate.getMonth();
+    if (monthDelta < 0 || (monthDelta === 0 && today.getDate() < birthDate.getDate())) {
+      age -= 1;
+    }
+    return `${age} years`;
+  }
+
+  contactValue(value: string | null): string {
+    return value?.trim() || 'Not recorded';
+  }
+
+  historyWithoutSelected(): Appointment[] {
+    const selectedId = this.selectedAppointment()?.id;
+    return this.patientHistory().filter((appointment) => appointment.id !== selectedId);
+  }
+
+  private loadPatientHistory(patientId: number): void {
+    this.isLoadingHistory.set(true);
+    this.historyError.set('');
+
+    this.appointmentService.listDoctorPatientHistory(patientId).subscribe({
+      next: (history) => {
+        this.patientHistory.set(history);
+        this.isLoadingHistory.set(false);
+      },
+      error: (error) => {
+        this.historyError.set(this.getErrorMessage(error, 'Unable to load patient history.'));
+        this.isLoadingHistory.set(false);
+      }
+    });
   }
 
   private updateAppointmentInList(updated: Appointment): void {
@@ -197,7 +251,7 @@ export class DoctorAppointmentsPage implements OnInit {
         return 'You do not have permission to access this page.';
       }
       if (error.status === 401) {
-        return 'Your session has expired. Please log in again.';
+        return 'Your session has expired. Please sign in again.';
       }
       if (error.status === 400) {
         return 'Invalid operation. The status transition may not be allowed.';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Slot } from '../../shared/models/appointment.model';
@@ -17,13 +17,35 @@ export class PatientSlotSelectionPage implements OnInit {
   private readonly appointmentService = inject(AppointmentService);
 
   readonly doctorId = signal<number>(0);
+  readonly doctorName = signal('');
+  readonly doctorSpecialty = signal('');
+  readonly doctorAddress = signal('');
+  readonly doctorDuration = signal<number | null>(null);
+
   readonly selectedDate = signal('');
   readonly slots = signal<Slot[]>([]);
   readonly selectedSlot = signal<Slot | null>(null);
   readonly isLoading = signal(false);
   readonly errorMessage = signal('');
+  readonly hasLoaded = signal(false);
 
   readonly minDate = new Date().toISOString().split('T')[0];
+
+  readonly hasDoctorContext = computed(() => !!this.doctorName() || this.doctorId() > 0);
+
+  readonly morningSlots = computed(() =>
+    this.slots().filter((s) => {
+      const hour = parseInt(s.startTime.split(':')[0], 10);
+      return hour < 12;
+    })
+  );
+
+  readonly afternoonSlots = computed(() =>
+    this.slots().filter((s) => {
+      const hour = parseInt(s.startTime.split(':')[0], 10);
+      return hour >= 12;
+    })
+  );
 
   ngOnInit(): void {
     this.route.params.subscribe((params) => {
@@ -32,6 +54,13 @@ export class PatientSlotSelectionPage implements OnInit {
         this.doctorId.set(id);
       }
     });
+
+    this.route.queryParams.subscribe((qp) => {
+      if (qp['name']) this.doctorName.set(qp['name']);
+      if (qp['specialty']) this.doctorSpecialty.set(qp['specialty']);
+      if (qp['address']) this.doctorAddress.set(qp['address']);
+      if (qp['duration']) this.doctorDuration.set(Number(qp['duration']));
+    });
   }
 
   loadSlots(): void {
@@ -39,6 +68,7 @@ export class PatientSlotSelectionPage implements OnInit {
     if (!date) return;
 
     this.isLoading.set(true);
+    this.hasLoaded.set(true);
     this.errorMessage.set('');
     this.slots.set([]);
     this.selectedSlot.set(null);
@@ -56,21 +86,28 @@ export class PatientSlotSelectionPage implements OnInit {
   }
 
   selectSlot(slot: Slot): void {
-    this.selectedSlot.set(slot);
+    if (this.selectedSlot()?.startTime === slot.startTime) {
+      this.selectedSlot.set(null);
+    } else {
+      this.selectedSlot.set(slot);
+    }
   }
 
   proceedToBooking(): void {
     const slot = this.selectedSlot();
     if (!slot) return;
 
-    this.router.navigate(['/patient/book'], {
-      queryParams: {
-        doctorId: this.doctorId(),
-        date: this.selectedDate(),
-        startTime: slot.startTime,
-        endTime: slot.endTime
-      }
-    });
+    const qp: Record<string, string | number> = {
+      doctorId: this.doctorId(),
+      date: this.selectedDate(),
+      startTime: slot.startTime,
+      endTime: slot.endTime
+    };
+    if (this.doctorName()) qp['name'] = this.doctorName();
+    if (this.doctorSpecialty()) qp['specialty'] = this.doctorSpecialty();
+    if (this.doctorDuration() !== null) qp['duration'] = this.doctorDuration()!;
+
+    this.router.navigate(['/patient/book'], { queryParams: qp });
   }
 
   formatTime(time: string): string {
@@ -97,8 +134,8 @@ export class PatientSlotSelectionPage implements OnInit {
     if (typeof error === 'object' && error !== null) {
       const err = error as Record<string, unknown>;
       if (err['status'] === 403) return 'You do not have permission to view available slots.';
-      if (err['status'] === 401) return 'Your session has expired. Please log in again.';
+      if (err['status'] === 401) return 'Your session has expired. Please sign in again.';
     }
-    return 'Unable to load available slots. Please try again.';
+    return 'Unable to load available slots. Please try again later.';
   }
 }

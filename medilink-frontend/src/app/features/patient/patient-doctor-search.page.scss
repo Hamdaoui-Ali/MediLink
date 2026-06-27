@@ -1,114 +1,239 @@
 .search-page {
-  max-width: 640px;
+  max-width: 940px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: var(--space-lg);
+}
+
+.search-page__header {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 1.75rem;
+  padding: var(--space-lg);
+  border: 1px solid rgba(15, 118, 110, 0.14);
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(6, 182, 212, 0.16), transparent 18rem),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(240, 253, 250, 0.96));
+  box-shadow: var(--shadow-card);
+}
+
+.search-page__header::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: linear-gradient(180deg, var(--color-primary), var(--color-accent));
+}
+
+.search-page__title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.6rem, 4vw, 2.25rem);
+  color: var(--color-primary-dark);
+}
+
+.search-page__subtitle {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
 }
 
 .search-bar {
   display: flex;
   gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
+  padding: 0.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow-sm);
 }
 
-.search-bar input {
+.search-bar__input {
   flex: 1;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  min-height: 48px;
+  padding: 0 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 0.95rem;
+  background: var(--color-surface);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.search-bar__input:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-focus);
+  outline: none;
+}
+
+.search-bar__input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.search-bar__btn {
+  min-height: 48px;
+  padding: 0 1.5rem;
   font-size: 0.95rem;
 }
 
-.message {
-  padding: 0.6rem 0.9rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
+.results-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
 }
 
-.message-error {
-  background: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
-}
-
-.message-empty {
-  background: #f3f4f6;
-  color: #6b7280;
-  border: 1px solid #e5e7eb;
-  text-align: center;
-  padding: 1.25rem;
+.results-summary p {
+  margin: 0;
 }
 
 .doctor-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-md);
 }
 
 .doctor-card {
-  padding: 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #fff;
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  border-color: rgba(15, 118, 110, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 252, 253, 0.94));
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
-.doctor-card h3 {
-  margin: 0 0 0.25rem;
+.doctor-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
 }
 
-.specialty-badge {
-  display: inline-block;
-  padding: 0.15rem 0.5rem;
-  border-radius: 10px;
-  background: #dbeafe;
-  color: #1e40af;
-  font-size: 0.8rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+.doctor-card:hover {
+  border-color: var(--color-primary-light);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
 }
 
-.bio {
-  color: #4b5563;
-  font-size: 0.9rem;
-  margin: 0.5rem 0;
-}
-
-.meta {
+.doctor-card__header {
   display: flex;
-  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-md) 0;
+}
+
+.doctor-card__name {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+  color: var(--color-primary-dark);
+}
+
+.doctor-card__body {
+  padding: 0 var(--space-md);
+}
+
+.doctor-card__bio {
+  margin: var(--space-sm) 0;
+  color: var(--color-text-label);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.doctor-card__details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-top: var(--space-sm);
+}
+
+.doctor-card__detail {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   font-size: 0.85rem;
-  color: #6b7280;
-  margin-bottom: 0.75rem;
+  color: var(--color-text-muted);
 }
 
-.btn-primary {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 6px;
-  background: #1d4ed8;
-  color: #fff;
-  font-weight: 700;
+.doctor-card__detail-icon {
   font-size: 0.9rem;
-  cursor: pointer;
-  text-decoration: none;
+}
+
+.doctor-card__footer {
+  padding: var(--space-md);
+  border-top: 1px solid var(--color-border-light);
+  background: rgba(248, 252, 253, 0.72);
+  margin-top: var(--space-sm);
+}
+
+.empty-state {
+  padding: 2.5rem 1.5rem;
   text-align: center;
+  background: linear-gradient(180deg, #ffffff, var(--color-surface-soft));
+  border: 1px solid rgba(15, 118, 110, 0.12);
+  border-radius: var(--radius-md);
 }
 
-.btn-primary:disabled {
-  background: #93c5fd;
-  cursor: not-allowed;
+.empty-state__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text);
 }
 
-.btn-select {
-  display: block;
-  text-align: center;
+.empty-state p {
+  margin: 0.5rem 0;
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
 }
 
-.btn-link {
-  display: inline-block;
+.empty-state .btn {
   margin-top: 1.25rem;
-  color: #1d4ed8;
-  font-weight: 600;
-  text-decoration: none;
+}
+
+.empty-state__hint {
+  color: var(--color-text-muted) !important;
+  font-size: 0.85rem !important;
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+}
+
+.error-state p {
+  margin: 0;
+  color: var(--color-danger-text);
+  font-size: 0.92rem;
+}
+
+.loading-state {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+}
+
+@media (max-width: 600px) {
+  .search-bar {
+    flex-direction: column;
+  }
+
+  .doctor-card__details {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 }

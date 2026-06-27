@@ -14,6 +14,11 @@ describe('AppointmentService', () => {
       doctorId: 1,
       patientId: 2,
       patientName: 'Jane Patient',
+      patientEmail: 'jane.patient@medilink.local',
+      patientPhoneNumber: '+15551234567',
+      patientDateOfBirth: '1990-01-15',
+      patientGender: 'FEMALE',
+      patientAddress: '123 Patient St',
       appointmentDate: '2026-06-15',
       startTime: '10:00:00',
       endTime: '10:30:00',
@@ -26,6 +31,11 @@ describe('AppointmentService', () => {
       doctorId: 1,
       patientId: 3,
       patientName: 'John Smith',
+      patientEmail: 'john.smith@medilink.local',
+      patientPhoneNumber: '+15557654321',
+      patientDateOfBirth: null,
+      patientGender: null,
+      patientAddress: null,
       appointmentDate: '2026-06-16',
       startTime: '14:00:00',
       endTime: '14:30:00',
@@ -106,5 +116,16 @@ describe('AppointmentService', () => {
 
     const req = httpTesting.expectOne('/v1/doctor/appointments');
     req.flush([mockAppointments[0]]);
+  });
+
+  it('should list patient history for a doctor appointment', () => {
+    service.listDoctorPatientHistory(2).subscribe((appointments) => {
+      expect(appointments.length).toBe(1);
+      expect(appointments[0].patientEmail).toBe('jane.patient@medilink.local');
+    });
+
+    const req = httpTesting.expectOne('/v1/doctor/appointments/patients/2/appointments');
+    expect(req.request.method).toBe('GET');
+    req.flush({ success: true, data: [mockAppointments[0]] });
   });
 });
