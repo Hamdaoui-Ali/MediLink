@@ -1,4 +1,4 @@
-# MediLink Workspace
+# MediLink: Doctor-Patient Appointment Management Platform
 
 MediLink is a doctor-patient appointment management platform focused on a reliable MVP: patient booking, doctor availability management, appointment tracking, and admin-managed platform data.
 
